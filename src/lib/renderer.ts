@@ -14,6 +14,7 @@ function wrapperStyle(gap: string) {
 
 function buildField(field: Field, theme: Theme, gap: string): HTMLElement {
   const wrapper = document.createElement("div");
+  wrapper.setAttribute("data-field-id", field.id);
   wrapper.style.cssText = wrapperStyle(gap);
 
   const label = document.createElement("label");
@@ -96,6 +97,7 @@ function buildField(field: Field, theme: Theme, gap: string): HTMLElement {
     }
     case "dynamic-list": {
       const container = document.createElement("div");
+      container.setAttribute("data-rows-container", "");
       container.style.cssText = "display:flex;flex-direction:column;gap:8px;";
       // Capture narrowed subFields before entering the closure — TypeScript
       // doesn't narrow discriminated unions through function closures.
@@ -103,6 +105,7 @@ function buildField(field: Field, theme: Theme, gap: string): HTMLElement {
 
       const addRow = () => {
         const row = document.createElement("div");
+        row.setAttribute("data-row", "");
         row.style.cssText = "display:flex;gap:8px;align-items:flex-end;";
         subFields.forEach((sub) => {
           const sw = document.createElement("div");

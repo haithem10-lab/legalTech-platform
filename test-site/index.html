@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hale & Warren LLP — Client Portal</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #F3F1EC;
+      color: #1C2127;
+      min-height: 100vh;
+    }
+
+    /* Nav */
+    header {
+      background: #1C2127;
+      padding: 0 40px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      font-size: 17px;
+      font-weight: 600;
+      color: #FBF8F2;
+      letter-spacing: 0.01em;
+    }
+    .logo span { color: #4CAF82; }
+    nav a {
+      color: #A89F8C;
+      font-size: 13px;
+      text-decoration: none;
+      margin-left: 24px;
+    }
+    nav a:hover { color: #FBF8F2; }
+
+    /* Hero */
+    .hero {
+      background: #FBF8F2;
+      border-bottom: 1px solid #C9C2B4;
+      padding: 56px 40px 48px;
+      text-align: center;
+    }
+    .hero-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #1F6F54;
+      margin-bottom: 12px;
+    }
+    .hero h1 {
+      font-size: 36px;
+      font-weight: 600;
+      font-family: Georgia, "Times New Roman", serif;
+      color: #1C2127;
+      margin-bottom: 14px;
+      line-height: 1.2;
+    }
+    .hero p {
+      font-size: 15px;
+      color: #6B7280;
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* Main layout */
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: #8A8270;
+      margin-bottom: 20px;
+    }
+
+    /* Sidebar layout for wider screens */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 32px;
+      align-items: start;
+    }
+    @media (max-width: 700px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    /* Info card */
+    .info-card {
+      background: #FBF8F2;
+      border: 1px solid #C9C2B4;
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .info-card h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1C2127;
+      margin-bottom: 10px;
+    }
+    .info-card p {
+      font-size: 13px;
+      color: #6B7280;
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+    .info-card p:last-child { margin-bottom: 0; }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: #E6F0EA;
+      color: #1F6F54;
+    }
+
+    footer {
+      text-align: center;
+      padding: 32px;
+      font-size: 12px;
+      color: #A89F8C;
+      border-top: 1px solid #C9C2B4;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">Hale <span>&</span> Warren <span style="color:#A89F8C;font-weight:400;">LLP</span></div>
+    <nav>
+      <a href="#">Practice Areas</a>
+      <a href="#">Attorneys</a>
+      <a href="#">Client Portal</a>
+      <a href="#">Contact</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <p class="hero-eyebrow">New Client Intake</p>
+    <h1>Begin Your Matter</h1>
+    <p>
+      Complete the intake form below so our team can review your matter
+      and match you with the right attorney. All information is kept
+      strictly confidential.
+    </p>
+  </section>
+
+  <main>
+    <div class="layout">
+      <div>
+        <p class="section-label">Intake Form</p>
+
+        <!--
+          ┌──────────────────────────────────────────────────────────────┐
+          │  REPLACE the data-workflow-id value with a real workflow ID  │
+          │  from your Firestore. The workflow must be set to "published" │
+          │  and http://localhost:3000 must be in allowedOrigins.        │
+          └──────────────────────────────────────────────────────────────┘
+        -->
+        <script
+          src="http://localhost:3000/embed.js"
+          data-workflow-id="TIKoH0njBxHZlbfr2QpM"
+        ></script>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="info-card">
+          <h3>Why do we collect this?</h3>
+          <p>
+            We gather basic information to determine if we can represent
+            your matter and to avoid conflicts of interest.
+          </p>
+          <p>
+            Your data is encrypted in transit and never shared with
+            third parties without your consent.
+          </p>
+          <span class="badge">SSL Secured</span>
+        </div>
+
+        <div class="info-card">
+          <h3>What happens next?</h3>
+          <p>
+            One of our intake coordinators will review your submission
+            within one business day and reach out to schedule a
+            consultation.
+          </p>
+        </div>
+
+        <div class="info-card">
+          <h3>Need immediate help?</h3>
+          <p>
+            Call us at <strong style="color:#1C2127;">(212) 555-0190</strong>
+            Monday–Friday, 9 AM – 6 PM EST.
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    &copy; 2025 Hale &amp; Warren LLP &mdash; Attorney Advertising
+  </footer>
+
+</body>
+</html>

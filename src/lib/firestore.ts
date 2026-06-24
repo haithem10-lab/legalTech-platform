@@ -60,3 +60,22 @@ export async function listWorkflows(accountId: string): Promise<Workflow[]> {
     toWorkflow(doc.id, doc.data())
   );
 }
+
+export async function writeSubmission(
+  workflowId: string,
+  payload: {
+    data: Record<string, unknown>;
+    originHost: string;
+  }
+): Promise<string> {
+  const ref = await db
+    .collection(WORKFLOWS)
+    .doc(workflowId)
+    .collection("entries")
+    .add({
+      data: payload.data,
+      originHost: payload.originHost,
+      submittedAt: FieldValue.serverTimestamp(),
+    });
+  return ref.id;
+}
