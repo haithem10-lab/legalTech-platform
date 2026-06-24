@@ -59,16 +59,13 @@ export type Field =
 export interface Theme {
   bgColor: string;
   font: string;
-  radius: "none" | "sm" | "md" | "lg" | "full";
-  buttonStyle: {
-    bgColor: string;
-    textColor: string;
-    radius: "none" | "sm" | "md" | "lg" | "full";
-  };
+  radius: number;        // CSS border-radius in px
+  buttonColor: string;
+  buttonTextColor: string;
   density: "compact" | "spacious";
 }
 
-export type WorkflowStatus = "draft" | "published";
+export type WorkflowStatus = "draft" | "published" | "archived";
 
 export interface Workflow {
   id: string;
