@@ -82,3 +82,11 @@ export interface Workflow {
 }
 
 export type PublicWorkflow = Omit<Workflow, "hmacSecret" | "accountId">;
+
+export interface Submission {
+  id: string;
+  data: Record<string, unknown>;
+  submittedAt: string;
+  originHost: string;
+  webhookStatus?: "delivered" | "failed";
+}

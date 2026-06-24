@@ -78,7 +78,7 @@ function SubFieldsEditor({
         <div
           key={sf.id}
           className="flex gap-1 items-center p-2 rounded"
-          style={{ background: "#F9FAFB" }}
+          style={{ background: "#EDE8DD" }}
         >
           <input
             value={sf.label}
@@ -140,7 +140,7 @@ function ConfigPanel({ field, onUpdate }: { field: Field; onUpdate: (u: Partial<
   return (
     <div
       className="px-3 py-3 flex flex-col gap-3 text-xs"
-      style={{ background: "#F9FAFB", borderTop: "1px solid #E5E7EB" }}
+      style={{ background: "#F3F1EC", borderTop: "1px solid #C9C2B4" }}
     >
       {/* Label */}
       <div>

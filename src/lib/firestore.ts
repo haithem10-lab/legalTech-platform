@@ -4,7 +4,7 @@ import {
   type QueryDocumentSnapshot,
 } from "firebase-admin/firestore";
 import { db } from "@/lib/firebase";
-import type { Workflow } from "@/types/workflow";
+import type { Workflow, Submission } from "@/types/workflow";
 
 const WORKFLOWS = "workflows";
 
@@ -59,6 +59,37 @@ export async function listWorkflows(accountId: string): Promise<Workflow[]> {
   return snap.docs.map((doc: QueryDocumentSnapshot) =>
     toWorkflow(doc.id, doc.data())
   );
+}
+
+export async function getSubmissions(workflowId: string): Promise<Submission[]> {
+  const snap = await db
+    .collection(WORKFLOWS)
+    .doc(workflowId)
+    .collection("entries")
+    .orderBy("submittedAt", "desc")
+    .limit(200)
+    .get();
+
+  return snap.docs.map((doc: QueryDocumentSnapshot) => ({
+    id: doc.id,
+    data: (doc.data().data ?? {}) as Record<string, unknown>,
+    submittedAt: tsToISO(doc.data().submittedAt),
+    originHost: (doc.data().originHost as string) ?? "",
+    webhookStatus: doc.data().webhookStatus as Submission["webhookStatus"],
+  }));
+}
+
+export async function updateSubmission(
+  workflowId: string,
+  submissionId: string,
+  patch: Partial<Pick<Submission, "webhookStatus">>
+): Promise<void> {
+  await db
+    .collection(WORKFLOWS)
+    .doc(workflowId)
+    .collection("entries")
+    .doc(submissionId)
+    .set(patch, { merge: true });
 }
 
 export async function writeSubmission(

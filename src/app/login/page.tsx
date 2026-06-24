@@ -50,7 +50,7 @@ export default function LoginPage() {
             className={`text-lg font-semibold ${inter.className}`}
             style={{ color: "#1C2127" }}
           >
-            LegalForm
+            LegalTech
           </span>
         </div>
 

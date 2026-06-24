@@ -16,7 +16,7 @@ export function AdminNav() {
       <div className="flex items-center gap-2 min-w-[160px]">
         <FileText size={20} color="#1F6F54" />
         <span className="font-semibold text-sm tracking-wide text-white">
-          LegalForm
+          LegalTech
         </span>
       </div>
 

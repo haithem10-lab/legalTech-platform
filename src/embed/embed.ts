@@ -92,9 +92,10 @@ import type { PublicWorkflow } from "../types/workflow";
   // Loading state
   showMessage("Loading form…");
 
-  fetch(`${appOrigin}/api/public/config/${workflowId}`, {
+  fetch(`${appOrigin}/api/public/config/${workflowId}?t=${Date.now()}`, {
     method: "GET",
-    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+    credentials: "omit",
   })
     .then(async (res) => {
       if (res.status === 403) {

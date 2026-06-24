@@ -3,8 +3,8 @@
  *
  * Rules:
  * - null origin (file://, sandboxed iframe): allowed in development only.
- * - Non-null origin + empty allowedOrigins list: allowed (open access).
- * - Non-null origin + non-empty allowedOrigins: must be in the list.
+ * - Empty allowedOrigins list: denied (no origins configured).
+ * - Non-empty allowedOrigins: origin must be in the list.
  */
 export function isOriginAllowed(
   origin: string | null,
@@ -13,7 +13,7 @@ export function isOriginAllowed(
   if (!origin) {
     return process.env.NODE_ENV === "development";
   }
-  if (allowedOrigins.length === 0) return true;
+  if (allowedOrigins.length === 0) return false;
   const normalised = origin.replace(/\/$/, "");
   return allowedOrigins.includes(normalised);
 }

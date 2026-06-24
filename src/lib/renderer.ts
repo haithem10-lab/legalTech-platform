@@ -58,6 +58,11 @@ function buildField(field: Field, theme: Theme, gap: string): HTMLElement {
     case "radio": {
       const group = document.createElement("div");
       group.style.cssText = "display:flex;flex-direction:column;gap:8px;";
+
+      const warning = document.createElement("div");
+      warning.style.cssText = "background:#FBEAE8;color:#B23A2E;padding:8px 12px;border-radius:4px;font-size:11px;margin-top:8px;display:none;align-items:center;gap:6px;";
+      warning.textContent = "⚠ Flagged for same-day attorney review";
+
       field.options.forEach((opt) => {
         const row = document.createElement("label");
         row.style.cssText = "display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;";
@@ -66,11 +71,17 @@ function buildField(field: Field, theme: Theme, gap: string): HTMLElement {
         radio.name = field.id;
         radio.value = opt;
         radio.required = field.required;
+        radio.addEventListener("change", () => {
+          const isHigh = radio.value.toLowerCase() === "high";
+          warning.style.display = isHigh ? "flex" : "none";
+        });
         row.appendChild(radio);
         row.appendChild(document.createTextNode(opt));
         group.appendChild(row);
       });
+
       wrapper.appendChild(group);
+      wrapper.appendChild(warning);
       break;
     }
     case "file": {

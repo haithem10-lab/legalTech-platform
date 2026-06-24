@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { createHmac } from "crypto";
 import { z } from "zod";
-import { getWorkflow, writeSubmission } from "@/lib/firestore";
-import { isOriginAllowed, corsHeaders } from "@/lib/origin";
+import { getWorkflow, writeSubmission, updateSubmission } from "@/lib/firestore";
+import { isOriginAllowed } from "@/lib/origin";
+import { corsHeaders, handleOptions } from "@/lib/cors";
 import type { Field } from "@/types/workflow";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -41,7 +42,6 @@ function buildSchema(fields: Field[]) {
         break;
       }
       case "file":
-        // Accepts a GCS path string written by the upload-url flow
         shape[field.id] = z.string().optional();
         break;
       case "dynamic-list":
@@ -53,6 +53,12 @@ function buildSchema(fields: Field[]) {
   return z.object(shape);
 }
 
+// ─── OPTIONS ──────────────────────────────────────────────────────────────────
+
+export function OPTIONS(request: Request) {
+  return handleOptions(request);
+}
+
 // ─── POST ─────────────────────────────────────────────────────────────────────
 
 export async function POST(
@@ -61,33 +67,31 @@ export async function POST(
 ) {
   const { workflowId } = params;
   const origin = request.headers.get("origin");
+  const headers = corsHeaders(origin);
 
-  // Parse body early so we can return helpful errors
   let body: { data?: unknown } = {};
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400, headers });
   }
 
   const workflow = await getWorkflow(workflowId);
 
   if (!workflow || workflow.status !== "published") {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ error: "Not found" }, { status: 404, headers });
   }
 
   if (!isOriginAllowed(origin, workflow.allowedOrigins)) {
-    return json403(origin, "Origin not allowed");
+    return NextResponse.json({ error: "Origin not allowed" }, { status: 403, headers });
   }
 
-  // Validate shape of incoming data object
   if (!body.data || typeof body.data !== "object" || Array.isArray(body.data)) {
-    return jsonErr(origin, 400, "Missing data object");
+    return NextResponse.json({ error: "Missing data object" }, { status: 400, headers });
   }
 
   const rawData = body.data as Record<string, unknown>;
 
-  // Sanitize all string inputs before validation
   const sanitizedData: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(rawData)) {
     if (typeof value === "string") {
@@ -109,7 +113,6 @@ export async function POST(
     }
   }
 
-  // Dynamic Zod validation from schema
   const zodSchema = buildSchema(workflow.schema);
   const result = zodSchema.safeParse(sanitizedData);
 
@@ -119,19 +122,20 @@ export async function POST(
       const key = String(issue.path[0] ?? "");
       if (key) errors[key] = issue.message;
     }
-    return jsonErr(origin, 400, "Validation failed", errors);
+    return NextResponse.json(
+      { error: "Validation failed", errors },
+      { status: 400, headers }
+    );
   }
 
   const submittedAt = new Date().toISOString();
   const originHost = origin ?? "unknown";
 
-  // Write to Firestore
   const submissionId = await writeSubmission(workflowId, {
     data: result.data as Record<string, unknown>,
     originHost,
   });
 
-  // Webhook delivery (best-effort — never blocks the 200 response)
   if (workflow.webhookUrl) {
     const webhookPayload = JSON.stringify({
       workflowId,
@@ -153,50 +157,16 @@ export async function POST(
         "X-Workflow-Id": workflowId,
       },
       body: webhookPayload,
-    }).catch((err) => {
-      console.error(`[webhook] delivery failed for ${workflowId}:`, err);
-    });
+    })
+      .then(async (wRes) => {
+        const status = wRes.ok ? "delivered" : "failed";
+        await updateSubmission(workflowId, submissionId, { webhookStatus: status });
+      })
+      .catch(async () => {
+        console.error(`[webhook] delivery failed for ${workflowId}`);
+        await updateSubmission(workflowId, submissionId, { webhookStatus: "failed" });
+      });
   }
 
-  const res = NextResponse.json({ ok: true, submissionId }, { status: 200 });
-  const cors = corsHeaders(origin);
-  Object.entries(cors).forEach(([k, v]) => res.headers.set(k, v));
-  return res;
-}
-
-export async function OPTIONS(request: Request) {
-  const origin = request.headers.get("origin") ?? "*";
-  return new Response(null, {
-    status: 204,
-    headers: {
-      "Access-Control-Allow-Origin": origin,
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Access-Control-Max-Age": "86400",
-    },
-  });
-}
-
-// ─── Response helpers ─────────────────────────────────────────────────────────
-
-function json403(origin: string | null, message: string) {
-  const res = NextResponse.json({ error: message }, { status: 403 });
-  const cors = corsHeaders(origin);
-  Object.entries(cors).forEach(([k, v]) => res.headers.set(k, v));
-  return res;
-}
-
-function jsonErr(
-  origin: string | null,
-  status: number,
-  message: string,
-  errors?: Record<string, string>
-) {
-  const res = NextResponse.json(
-    { error: message, ...(errors ? { errors } : {}) },
-    { status }
-  );
-  const cors = corsHeaders(origin);
-  Object.entries(cors).forEach(([k, v]) => res.headers.set(k, v));
-  return res;
+  return NextResponse.json({ ok: true, submissionId }, { status: 200, headers });
 }

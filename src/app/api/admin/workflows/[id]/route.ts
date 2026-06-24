@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { randomBytes } from "crypto";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getWorkflow, saveWorkflow } from "@/lib/firestore";
@@ -49,6 +50,13 @@ export async function PATCH(request: Request, { params }: Ctx) {
   if (result instanceof NextResponse) return result;
 
   const body = await request.json().catch(() => ({}));
+
+  // Secret regeneration — handled separately; never allowed via PATCHABLE loop
+  if (body.regenerateSecret === true) {
+    const newSecret = randomBytes(32).toString("hex");
+    await saveWorkflow(params.id, { hmacSecret: newSecret });
+    return NextResponse.json({ ok: true, hmacSecret: newSecret });
+  }
 
   const update: Partial<Workflow> = {};
   for (const key of PATCHABLE) {

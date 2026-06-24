@@ -68,7 +68,7 @@ export default function NewWorkflowPage() {
           {error && (
             <div
               className="text-sm px-4 py-3 rounded-md"
-              style={{ background: "#FEE2E2", color: "#991B1B" }}
+              style={{ background: "#FEF2F2", border: "1px solid #FECACA", color: "#B23A2E" }}
             >
               {error}
             </div>
