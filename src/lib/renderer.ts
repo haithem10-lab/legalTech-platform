@@ -129,17 +129,20 @@ function buildField(field: Field, theme: Theme, gap: string, index: number): HTM
 
     case "file": {
       const dropzone = document.createElement("div");
-      dropzone.style.cssText = `padding:20px;border:2px dashed #D6D0C8;border-radius:${theme.radius}px;background:#FAFAF8;text-align:center;cursor:pointer;transition:border-color 0.15s;`;
+      dropzone.setAttribute("data-dropzone", "");
+      dropzone.style.cssText = `padding:20px;border:2px dashed #D6D0C8;border-radius:${theme.radius}px;background:#FAFAF8;text-align:center;cursor:pointer;transition:border-color 0.15s,background 0.15s;`;
       const input = document.createElement("input");
       input.type = "file";
       input.required = field.required;
       input.style.cssText = "display:none;";
-      if (field.acceptedTypes.length) input.accept = field.acceptedTypes.join(",");
+      input.accept = ".pdf,.docx,.jpg,.jpeg,.png";
       const hint = document.createElement("p");
-      hint.textContent =
-        field.placeholder ??
-        `Upload ${field.acceptedTypes.join(", ") || "file"} (max ${Math.round(field.maxSizeBytes / 1_000_000)}MB)`;
+      hint.setAttribute("data-hint", "");
+      hint.textContent = field.placeholder ?? "Click or drop a file to upload";
       hint.style.cssText = "font-size:13px;color:#8A8270;margin:0;";
+      const acceptedLabel = document.createElement("p");
+      acceptedLabel.textContent = "Accepted: PDF, DOCX, JPG, PNG · Max 10MB";
+      acceptedLabel.style.cssText = "font-size:11px;color:#8A8378;margin:6px 0 0;";
       dropzone.addEventListener("mouseenter", () => { dropzone.style.borderColor = "#1F6F54"; });
       dropzone.addEventListener("mouseleave", () => { dropzone.style.borderColor = "#D6D0C8"; });
       dropzone.addEventListener("click", () => input.click());
@@ -147,6 +150,7 @@ function buildField(field: Field, theme: Theme, gap: string, index: number): HTM
         if (input.files?.[0]) hint.textContent = input.files[0].name;
       });
       dropzone.appendChild(hint);
+      dropzone.appendChild(acceptedLabel);
       dropzone.appendChild(input);
       wrapper.appendChild(dropzone);
       break;

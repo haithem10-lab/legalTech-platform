@@ -1,13 +1,4 @@
-/**
- * Webhook receiver for local testing.
- *
- * Usage (from the project root):
- *   node webhook-test/receiver.mjs
- *
- * Reads .env.local automatically. Fetches each workflow's real hmacSecret
- * from Firestore on every incoming request so you never need to paste the
- * secret manually.
- */
+/** Webhook receiver for local testing*/
 
 import { createServer } from "node:http";
 import { createHmac } from "node:crypto";
@@ -29,7 +20,6 @@ try {
     if (eqIdx === -1) continue;
     const key = trimmed.slice(0, eqIdx).trim();
     let val = trimmed.slice(eqIdx + 1).trim();
-    // Strip surrounding quotes (handles quoted private key values)
     if (
       (val.startsWith('"') && val.endsWith('"')) ||
       (val.startsWith("'") && val.endsWith("'"))
@@ -60,7 +50,7 @@ if (!getApps().length) {
 
 const db = getFirestore();
 
-// ─── Server ───────────────────────────────────────────────────────────────────
+// Server
 
 const PORT = Number(process.env.PORT ?? 4000);
 
@@ -94,7 +84,6 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  // Fetch the real hmacSecret from Firestore
   let hmacSecret = "";
   try {
     const snap = await db.collection("workflows").doc(workflowId).get();
@@ -112,7 +101,6 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  // Verify signature against the raw body
   const expectedSig = createHmac("sha256", hmacSecret)
     .update(rawBody)
     .digest("hex");

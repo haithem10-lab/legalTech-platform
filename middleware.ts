@@ -6,8 +6,6 @@ export default withAuth({
   },
 });
 
-// Only /admin/* is protected. Public routes — /api/public/*, /login, /embed.js —
-// are never matched and therefore never blocked.
 export const config = {
   matcher: ["/admin/:path*"],
 };

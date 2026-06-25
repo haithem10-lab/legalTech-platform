@@ -5,6 +5,11 @@ import { Source_Serif_4, Inter, IBM_Plex_Mono } from "next/font/google";
 import { ChevronLeft } from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import { getWorkflow, getSubmission } from "@/lib/firestore";
+import { FileRow } from "./FileRow";
+
+function isFilePath(value: string) {
+  return value.startsWith("/uploads/") || value.startsWith("submissions/");
+}
 import type { Field } from "@/types/workflow";
 
 const serif = Source_Serif_4({ subsets: ["latin"], weight: ["400", "600"] });
@@ -148,6 +153,7 @@ export default async function SubmissionDetailPage({
               workflow.schema.map((field, idx) => {
                 const value = fieldValue(submission.data, field);
                 const isLast = idx === workflow.schema.length - 1;
+                const isFile = field.type === "file" && isFilePath(value);
                 return (
                   <div key={field.id} className="flex gap-4 px-5 py-4"
                     style={{ borderBottom: isLast ? "none" : "1px solid #F3F1EC", alignItems: "flex-start" }}>
@@ -158,12 +164,16 @@ export default async function SubmissionDetailPage({
                     </span>
                     {/* Label + value */}
                     <div className="flex-1 min-w-0">
-                      <p style={{ fontSize: 13, color: "#8A8270", margin: "0 0 3px", fontWeight: 400 }}>
+                      <p style={{ fontSize: 13, color: "#8A8270", margin: "0 0 6px", fontWeight: 400 }}>
                         {field.label}
                       </p>
-                      <p style={{ fontSize: 14, color: "#1C2127", margin: 0, fontWeight: 500, wordBreak: "break-word", lineHeight: 1.5 }}>
-                        {value}
-                      </p>
+                      {isFile ? (
+                        <FileRow filePath={value} />
+                      ) : (
+                        <p style={{ fontSize: 14, color: "#1C2127", margin: 0, fontWeight: 500, wordBreak: "break-word", lineHeight: 1.5 }}>
+                          {value}
+                        </p>
+                      )}
                     </div>
                   </div>
                 );

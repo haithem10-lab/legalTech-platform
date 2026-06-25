@@ -128,6 +128,69 @@ import type { PublicWorkflow } from "../types/workflow";
 
       const cleanup = renderForm(wrapper, workflow.schema, workflow.theme, workflow.name);
 
+      // Attach file upload handlers (upload on file select, before submit)
+      const ALLOWED_EXTS = [".pdf", ".docx", ".jpg", ".jpeg", ".png"];
+      for (const field of workflow.schema) {
+        if (field.type !== "file") continue;
+        const fieldEl = wrapper.querySelector(`[data-field-id="${field.id}"]`);
+        if (!fieldEl) continue;
+        const input    = fieldEl.querySelector<HTMLInputElement>('input[type="file"]');
+        const dropzone = fieldEl.querySelector<HTMLElement>("[data-dropzone]");
+        const hint     = fieldEl.querySelector<HTMLElement>("[data-hint]");
+        if (!input || !dropzone || !hint) continue;
+
+        input.addEventListener("change", async () => {
+          const file = input.files?.[0];
+          if (!file) return;
+
+          const ext = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
+          if (!ALLOWED_EXTS.includes(ext)) {
+            hint.textContent = "⚠ Only PDF, DOCX, JPG, or PNG files are allowed";
+            hint.style.color = "#B23A2E";
+            dropzone.style.borderColor = "#E2BBB4";
+            return;
+          }
+
+          hint.textContent = "Uploading… please wait";
+          hint.style.color = "#8A8270";
+          dropzone.style.borderColor = "#B8902E";
+          dropzone.style.background = "#FAFAF8";
+
+          try {
+            const form = new FormData();
+            form.append("file", file);
+            form.append("workflowId", workflowId!);
+
+            const res = await fetch(`${appOrigin}/api/public/upload`, {
+              method: "POST",
+              body: form,
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+              hint.textContent = `⚠ ${data.error ?? "Upload failed — please try again"}`;
+              hint.style.color = "#B23A2E";
+              dropzone.style.borderColor = "#E2BBB4";
+              dropzone.style.background = "#FEF2F2";
+              return;
+            }
+
+            (fieldEl as HTMLElement).dataset.filePath = data.filePath;
+
+            const icon = ext === ".pdf" ? "📄" : ext === ".docx" ? "📝" : "🖼️";
+            hint.textContent = `${icon} ${file.name}`;
+            hint.style.color = "#1F6F54";
+            dropzone.style.borderColor = "#BCD9C8";
+            dropzone.style.background = "#E6F0EA";
+          } catch {
+            hint.textContent = "Upload failed — check your connection";
+            hint.style.color = "#B23A2E";
+            dropzone.style.borderColor = "#E2BBB4";
+          }
+        });
+      }
+
       // Intercept form submit
       const form = wrapper.querySelector("form");
       if (!form) return;
@@ -164,10 +227,7 @@ import type { PublicWorkflow } from "../types/workflow";
               break;
             }
             case "file": {
-              const input = fieldEl.querySelector<HTMLInputElement>(
-                'input[type="file"]'
-              );
-              data[field.id] = input?.files?.[0]?.name ?? "";
+              data[field.id] = (fieldEl as HTMLElement).dataset.filePath ?? "";
               break;
             }
             case "dynamic-list": {
