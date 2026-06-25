@@ -71,7 +71,7 @@ FIREBASE_CLIENT_EMAIL=firebase-adminsdk@your-project.iam.gserviceaccount.com
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 
 # OpenAI — for the AI Layout Generator (optional)
-OPENAI_API_KEY=sk-...
+OPENAI_API_KEY=
 ```
 
 > **Note:** `FIREBASE_PRIVATE_KEY` must include the literal `\n` newline sequences exactly as they appear in the downloaded JSON.
@@ -144,8 +144,6 @@ Then open [http://localhost:8090](http://localhost:8090). The form fetches its c
 | `npm run build` | Production build |
 | `npm run start` | Start production server |
 | `npm run build:embed` | Bundle `embed.ts` → `public/embed.js` |
-| `npm run lint` | ESLint check |
-
 ---
 
 ## Project Structure
@@ -235,34 +233,6 @@ X-Signature: a3f1e8c2d4...   (64 hex chars)
 X-Workflow-Id: abc123
 ```
 
-### Verifying on your server
-
-```js
-import { createHmac, timingSafeEqual } from "crypto";
-
-function verifyWebhook(rawBody, receivedSig, secret) {
-  const expected = createHmac("sha256", secret)
-    .update(rawBody)
-    .digest("hex");
-
-  // Use timing-safe comparison to prevent timing attacks
-  return timingSafeEqual(
-    Buffer.from(expected, "hex"),
-    Buffer.from(receivedSig, "hex")
-  );
-}
-
-app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
-  const sig = req.headers["x-signature"];
-  if (!verifyWebhook(req.body, sig, process.env.WEBHOOK_SECRET)) {
-    return res.status(401).send("Invalid signature");
-  }
-  const payload = JSON.parse(req.body.toString());
-  // process payload...
-  res.sendStatus(200);
-});
-```
-
 > **Important:** Always use `timingSafeEqual` instead of `===` to compare signatures. String equality short-circuits on the first differing character, which leaks timing information that an attacker can exploit to forge signatures.
 
 ### Finding your secret
@@ -272,15 +242,6 @@ In the builder, click **Embed code → Security setup**. The signing secret is s
 ### Origin allow-list
 
 Before accepting any public API request, the server checks the `Origin` header against the workflow's `allowedOrigins` list:
-
-```ts
-// src/lib/origin.ts
-export function isOriginAllowed(origin: string | null, allowedOrigins: string[]): boolean {
-  if (!origin) return process.env.NODE_ENV === "development";
-  if (allowedOrigins.length === 0) return false; // deny-by-default
-  return allowedOrigins.includes(origin.replace(/\/$/, ""));
-}
-```
 
 - **Empty list → deny everything.** A newly created workflow rejects all embeds until you explicitly add an origin.
 - **Null origin** (e.g. `file://`, sandboxed iframe) is allowed only in local development.
@@ -352,23 +313,7 @@ embed.js executes (IIFE)
              On 400 with field errors → inline error messages per field
 ```
 
-### Cache-busting strategy
 
-The config endpoint is fetched with three layers of cache prevention:
-
-```ts
-fetch(`${appOrigin}/api/public/config/${workflowId}?t=${Date.now()}`, {
-  method: "GET",
-  cache: "no-store",
-  credentials: "omit",
-})
-```
-
-| Layer | Mechanism |
-|-------|-----------|
-| URL | `?t={timestamp}` makes every request a unique URL |
-| Fetch API | `cache: "no-store"` bypasses the browser's HTTP cache |
-| Server | `Cache-Control: no-store, no-cache, must-revalidate, private` prevents CDN/proxy caching |
 
 This ensures that when a lawyer updates their form and saves, the next page load on the embedded site always fetches the latest schema.
 
