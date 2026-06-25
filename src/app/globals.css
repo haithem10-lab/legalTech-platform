@@ -25,3 +25,7 @@ body {
     text-wrap: balance;
   }
 }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

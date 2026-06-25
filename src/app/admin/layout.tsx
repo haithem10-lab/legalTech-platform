@@ -20,7 +20,7 @@ export default async function AdminLayout({
         className="min-h-screen flex flex-col"
         style={{ background: "#FBF8F2" }}
       >
-        <AdminNav />
+        <AdminNav email={session.user?.email} />
         <main className="flex-1">{children}</main>
       </div>
     </WorkflowNameProvider>

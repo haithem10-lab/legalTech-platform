@@ -2,206 +2,124 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { Source_Serif_4, Inter, IBM_Plex_Mono } from "next/font/google";
-import { ChevronLeft, FileText } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import { getWorkflow, getSubmissions } from "@/lib/firestore";
 import { ExportButton } from "./ExportButton";
-import type { Submission } from "@/types/workflow";
+import { SubmissionRow, COLS } from "./SubmissionRow";
+import type { Field, Submission } from "@/types/workflow";
 
-const sourceSerif = Source_Serif_4({ subsets: ["latin"], weight: ["400", "600"] });
-const inter   = Inter({ subsets: ["latin"] });
-const ibmMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"] });
+const serif = Source_Serif_4({ subsets: ["latin"], weight: ["400", "600"] });
+const inter = Inter({ subsets: ["latin"] });
+const mono  = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"] });
 
-// ─── Formatters ───────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatDate(iso: string): string {
+function relativeTime(iso: string): string {
   if (!iso) return "—";
-  const d = new Date(iso);
-  const datePart = new Intl.DateTimeFormat("en-US", {
-    month: "short", day: "numeric", year: "numeric",
-  }).format(d);
-  const timePart = new Intl.DateTimeFormat("en-US", {
-    hour: "2-digit", minute: "2-digit", hour12: false,
-  }).format(d);
-  return `${datePart} · ${timePart}`;
+  const diff  = Date.now() - new Date(iso).getTime();
+  const mins  = Math.floor(diff / 60_000);
+  const hours = Math.floor(diff / 3_600_000);
+  const days  = Math.floor(diff / 86_400_000);
+  if (mins  <  1) return "Just now";
+  if (mins  < 60) return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days  ===1) return "Yesterday";
+  return `${days}d ago`;
 }
 
-function stripProtocol(origin: string): string {
-  return origin.replace(/^https?:\/\//, "");
-}
+function extractCols(submission: Submission, schema: Field[]) {
+  const val = (id: string) => {
+    const v = submission.data[id];
+    if (v === null || v === undefined || v === "") return "—";
+    if (typeof v === "object") return JSON.stringify(v);
+    return String(v);
+  };
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+  // Applicant: first text or email field
+  const applicantField = schema.find((f) => f.type === "text" || f.type === "email");
+  const applicant = applicantField ? val(applicantField.id) : "—";
 
-function WebhookBadge({ status }: { status: Submission["webhookStatus"] }) {
-  if (!status) {
-    return <span className={inter.className} style={{ fontSize: 12, color: "#8A8378" }}>—</span>;
-  }
-  const delivered = status === "delivered";
-  return (
-    <span
-      className={inter.className}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 5,
-        fontSize: 11,
-        fontWeight: 600,
-        padding: "3px 8px",
-        borderRadius: 20,
-        background: delivered ? "#EFF6F3" : "#FBEAE8",
-        color: delivered ? "#1F6F54" : "#B23A2E",
-      }}
-    >
-      <span
-        style={{
-          width: 5, height: 5, borderRadius: "50%", flexShrink: 0,
-          background: delivered ? "#1F6F54" : "#B23A2E",
-        }}
-      />
-      {delivered ? "Delivered" : "Failed"}
-    </span>
-  );
+  // Entity type: second non-file non-list field (different from applicant)
+  const usable = schema.filter((f) => f.type !== "file" && f.type !== "dynamic-list");
+  const entityField = usable.find((f) => f.id !== applicantField?.id);
+  const entityType = entityField ? val(entityField.id) : "—";
+
+  // State: field whose label contains "state" / "jurisdiction"
+  const stateField = schema.find((f) => /state|jurisdiction/i.test(f.label));
+  const state = stateField ? val(stateField.id).slice(0, 3).toUpperCase() : "—";
+
+  return { applicant, entityType, state };
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default async function SubmissionsPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default async function SubmissionsPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
-  const workflow = await getWorkflow(params.id);
+  const workflow    = await getWorkflow(params.id);
   if (!workflow || workflow.accountId !== session.user.accountId) notFound();
 
   const submissions = await getSubmissions(params.id);
-  const labelMap = new Map(workflow.schema.map((f) => [f.id, f.label]));
+  const schema      = workflow.schema;
+
+  const failedCount = submissions.filter((s) => s.webhookStatus === "failed").length;
+  const subtitle = !workflow.webhookUrl
+    ? `${submissions.length} ${submissions.length === 1 ? "submission" : "submissions"}`
+    : failedCount > 0
+    ? `${submissions.length} submissions · ${failedCount} webhook${failedCount === 1 ? "" : "s"} failed`
+    : `${submissions.length} submissions · all webhooks delivered`;
 
   return (
-    <div style={{ background: "#F3F1EC", minHeight: "100vh" }}>
+    <div className={`min-h-full ${inter.className}`} style={{ background: "#F5F4EF" }}>
 
-      {/* ── Top bar ── */}
-      <div
-        style={{
-          background: "#FBF8F2",
-          borderBottom: "1px solid #C9C2B4",
-          padding: "14px 24px",
-          display: "flex",
-          alignItems: "center",
-          gap: 16,
-        }}
-      >
-        <Link
-          href={`/admin/workflows/${params.id}/build`}
-          style={{ display: "flex", alignItems: "center", color: "#1C2127", textDecoration: "none", flexShrink: 0 }}
-        >
-          <ChevronLeft size={20} />
-        </Link>
+      {/* ── Header ── */}
+      <div style={{ background: "#FBF8F2", borderBottom: "1px solid #C9C2B4", padding: "20px 32px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
 
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <h1
-            className={sourceSerif.className}
-            style={{ fontSize: 22, fontWeight: 600, color: "#1C2127", margin: 0, lineHeight: 1.2 }}
-          >
-            {workflow.name}
-          </h1>
-          <p
-            className={inter.className}
-            style={{ fontSize: 11, color: "#8A8378", margin: "2px 0 0", lineHeight: 1 }}
-          >
-            Workflows → {workflow.name} → Submissions
-          </p>
+          {/* Back link */}
+          <Link href="/admin/workflows"
+            className="inline-flex items-center gap-1 mb-4 transition-colors"
+            style={{ fontSize: 13, color: "#5C564C", textDecoration: "none" }}
+            onMouseEnter={undefined}>
+            <ChevronLeft size={14} /> All workflows
+          </Link>
+
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className={`font-semibold ${serif.className}`}
+                style={{ fontSize: 24, color: "#1C2127", margin: "0 0 4px", lineHeight: 1.2 }}>
+                {workflow.name}
+              </h1>
+              <p style={{ fontSize: 13, color: "#8A8270", margin: 0 }}>{subtitle}</p>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <ExportButton submissions={submissions} schema={workflow.schema} workflowName={workflow.name} />
+            </div>
+          </div>
         </div>
-
-        <span
-          className={inter.className}
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            padding: "4px 10px",
-            borderRadius: 20,
-            background: "#F3F1EC",
-            border: "1px solid #C9C2B4",
-            color: "#6B7280",
-            flexShrink: 0,
-          }}
-        >
-          {submissions.length} {submissions.length === 1 ? "submission" : "submissions"}
-        </span>
-
-        <ExportButton
-          submissions={submissions}
-          schema={workflow.schema}
-          workflowName={workflow.name}
-        />
       </div>
 
-      {/* ── Content ── */}
-      <div style={{ padding: "28px 24px", maxWidth: 1200, margin: "0 auto" }}>
+      {/* ── Table ── */}
+      <div style={{ maxWidth: 1100, margin: "28px auto", padding: "0 32px" }}>
         {submissions.length === 0 ? (
-
-          /* Empty state */
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "80px 24px",
-              gap: 12,
-            }}
-          >
-            <FileText size={36} color="#C9C2B4" />
-            <p
-              className={sourceSerif.className}
-              style={{ fontSize: 20, fontWeight: 600, color: "#1C2127", margin: 0 }}
-            >
+          <div className="flex flex-col items-center justify-center rounded-xl py-20 gap-3"
+            style={{ background: "#FFFFFF" }}>
+            <p className={`font-semibold ${serif.className}`} style={{ fontSize: 20, color: "#1C2127", margin: 0 }}>
               No submissions yet
             </p>
-            <p
-              className={inter.className}
-              style={{ fontSize: 14, color: "#8A8378", margin: 0 }}
-            >
-              Share your embed code to start collecting
+            <p style={{ fontSize: 13, color: "#8A8270", margin: 0 }}>
+              Your form hasn&apos;t received any submissions yet.
             </p>
           </div>
-
         ) : (
-
-          /* Table */
-          <div
-            style={{
-              background: "#FBF8F2",
-              border: "1px solid #C9C2B4",
-              borderRadius: 10,
-              overflow: "hidden",
-            }}
-          >
-            {/* Header */}
-            <div
-              className={inter.className}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "140px 1fr 180px 160px 120px",
-                background: "#F3F1EC",
-                borderBottom: "1px solid #C9C2B4",
-                padding: "10px 16px",
-              }}
-            >
-              {["ID", "DATA", "SUBMITTED", "ORIGIN", "WEBHOOK"].map((h) => (
-                <span
-                  key={h}
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    color: "#8A8378",
-                    padding: "0 8px",
-                  }}
-                >
+          <div className="rounded-xl overflow-hidden" style={{ background: "#FFFFFF" }}>
+            {/* Column headers */}
+            <div className={`${inter.className}`}
+              style={{ display: "grid", gridTemplateColumns: COLS, padding: "12px 20px", background: "#FBF8F2", borderBottom: "1px solid #EFECE3" }}>
+              {["Submission ID", "Applicant", "Entity type", "State", "Received", "Webhook"].map((h) => (
+                <span key={h} style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#8A8270" }}>
                   {h}
                 </span>
               ))}
@@ -209,96 +127,19 @@ export default async function SubmissionsPage({
 
             {/* Rows */}
             {submissions.map((s, i) => {
-              const entries = Object.entries(s.data);
-              const shown   = entries.slice(0, 3);
-              const more    = entries.length - 3;
-
+              const { applicant, entityType, state } = extractCols(s, schema);
               return (
-                <div
+                <SubmissionRow
                   key={s.id}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "140px 1fr 180px 160px 120px",
-                    background: "#FBF8F2",
-                    borderTop: i > 0 ? "1px solid #EFECE3" : undefined,
-                    padding: "14px 16px",
-                    alignItems: "start",
-                  }}
-                >
-                  {/* ID */}
-                  <div style={{ padding: "0 8px" }}>
-                    <span
-                      className={ibmMono.className}
-                      style={{ fontSize: 11, color: "#1F6F54" }}
-                    >
-                      {s.id.slice(0, 8)}
-                    </span>
-                  </div>
-
-                  {/* Data */}
-                  <div style={{ padding: "0 8px", display: "flex", flexDirection: "column", gap: 3 }}>
-                    {shown.map(([fieldId, value]) => {
-                      const label   = labelMap.get(fieldId) ?? fieldId;
-                      const display =
-                        value === null || value === undefined
-                          ? "—"
-                          : typeof value === "object"
-                          ? JSON.stringify(value)
-                          : String(value) || "—";
-                      return (
-                        <span
-                          key={fieldId}
-                          className={inter.className}
-                          style={{ fontSize: 12, lineHeight: 1.5 }}
-                        >
-                          <span style={{ color: "#8A8378" }}>{label}:</span>{" "}
-                          <span style={{ color: "#1C2127", fontWeight: 500 }}>{display}</span>
-                        </span>
-                      );
-                    })}
-                    {more > 0 && (
-                      <span
-                        className={inter.className}
-                        style={{ fontSize: 11, color: "#8A8378", marginTop: 1 }}
-                      >
-                        +{more} more
-                      </span>
-                    )}
-                    {entries.length === 0 && (
-                      <span
-                        className={inter.className}
-                        style={{ fontSize: 12, color: "#C9C2B4" }}
-                      >
-                        No data
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Submitted */}
-                  <div style={{ padding: "0 8px" }}>
-                    <span
-                      className={inter.className}
-                      style={{ fontSize: 12, color: "#5C564C" }}
-                    >
-                      {formatDate(s.submittedAt)}
-                    </span>
-                  </div>
-
-                  {/* Origin */}
-                  <div style={{ padding: "0 8px" }}>
-                    <span
-                      className={ibmMono.className}
-                      style={{ fontSize: 11, color: "#8A8378", wordBreak: "break-all" }}
-                    >
-                      {s.originHost ? stripProtocol(s.originHost) : "—"}
-                    </span>
-                  </div>
-
-                  {/* Webhook */}
-                  <div style={{ padding: "0 8px" }}>
-                    <WebhookBadge status={s.webhookStatus} />
-                  </div>
-                </div>
+                  id={s.id}
+                  workflowId={params.id}
+                  applicant={applicant}
+                  entityType={entityType}
+                  state={state}
+                  receivedLabel={relativeTime(s.submittedAt)}
+                  webhookStatus={s.webhookStatus ?? null}
+                  isFirst={i === 0}
+                />
               );
             })}
           </div>

@@ -126,7 +126,7 @@ import type { PublicWorkflow } from "../types/workflow";
       `;
       mount.appendChild(wrapper);
 
-      const cleanup = renderForm(wrapper, workflow.schema, workflow.theme);
+      const cleanup = renderForm(wrapper, workflow.schema, workflow.theme, workflow.name);
 
       // Intercept form submit
       const form = wrapper.querySelector("form");

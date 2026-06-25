@@ -59,9 +59,10 @@ export type Field =
 export interface Theme {
   bgColor: string;
   font: string;
-  radius: number;        // CSS border-radius in px
+  radius: number;
   buttonColor: string;
   buttonTextColor: string;
+  buttonSize?: "sm" | "md" | "lg";
   density: "compact" | "spacious";
 }
 

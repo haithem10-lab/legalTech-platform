@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smith &amp; Associates Law Firm | New York Business &amp; Corporate Law</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      color: #1C2127;
+      background: #fff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Nav ── */
+    nav {
+      background: #1C2127;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      padding: 0 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: #FBF8F2;
+      letter-spacing: 0.01em;
+      flex: 1;
+    }
+
+    .nav-logo span { color: #4A9E7A; }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 36px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: rgba(251,248,242,0.72);
+      text-decoration: none;
+      letter-spacing: 0.01em;
+      transition: color 0.15s;
+    }
+
+    .nav-links a:hover { color: #FBF8F2; }
+
+    .nav-links .cta {
+      background: #1F6F54;
+      color: #FBF8F2 !important;
+      padding: 8px 18px;
+      border-radius: 5px;
+      font-size: 13px;
+    }
+
+    .nav-links .cta:hover { background: #196148; }
+
+    /* ── Hero ── */
+    .hero {
+      background: #1C2127;
+      padding: 100px 60px 110px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 45%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(31,111,84,0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #4A9E7A;
+      margin-bottom: 22px;
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 52px;
+      font-weight: 700;
+      color: #FBF8F2;
+      line-height: 1.15;
+      max-width: 680px;
+      margin-bottom: 24px;
+    }
+
+    .hero p {
+      font-size: 16px;
+      line-height: 1.75;
+      color: rgba(251,248,242,0.65);
+      max-width: 520px;
+      margin-bottom: 40px;
+      font-weight: 300;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .btn-outline {
+      display: inline-block;
+      padding: 13px 28px;
+      border: 1.5px solid rgba(251,248,242,0.5);
+      border-radius: 5px;
+      color: #FBF8F2;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .btn-outline:hover {
+      border-color: #FBF8F2;
+      background: rgba(251,248,242,0.06);
+    }
+
+    .btn-text-link {
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(251,248,242,0.55);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.15s;
+    }
+
+    .btn-text-link:hover { color: #FBF8F2; }
+
+    .hero-stats {
+      display: flex;
+      gap: 48px;
+      margin-top: 64px;
+      padding-top: 40px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .stat-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px;
+      font-weight: 700;
+      color: #FBF8F2;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: rgba(251,248,242,0.45);
+      margin-top: 6px;
+      font-weight: 400;
+      letter-spacing: 0.03em;
+    }
+
+    /* ── Practice areas ── */
+    .practice-areas {
+      background: #F5F4F0;
+      padding: 88px 60px;
+    }
+
+    .section-eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #1F6F54;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px;
+      font-weight: 700;
+      color: #1C2127;
+      margin-bottom: 10px;
+    }
+
+    .section-subtitle {
+      font-size: 15px;
+      color: #6B6459;
+      max-width: 480px;
+      line-height: 1.65;
+      margin-bottom: 48px;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #E2DDD6;
+      border-radius: 8px;
+      padding: 32px 28px;
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+
+    .card:hover {
+      box-shadow: 0 4px 24px rgba(28,33,39,0.08);
+      border-color: #C9C2B4;
+    }
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      background: #EFF6F3;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 20px;
+    }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: #1C2127;
+      margin-bottom: 10px;
+    }
+
+    .card-desc {
+      font-size: 14px;
+      line-height: 1.65;
+      color: #6B6459;
+    }
+
+    .card-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #1F6F54;
+      text-decoration: none;
+      margin-top: 18px;
+    }
+
+    /* ── Intake ── */
+    .intake {
+      background: #FBF8F2;
+      padding: 88px 60px;
+    }
+
+    .intake-inner {
+      display: grid;
+      grid-template-columns: 2fr 3fr;
+      gap: 72px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .intake-heading {
+      font-family: 'Playfair Display', serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: #1C2127;
+      line-height: 1.25;
+      margin-bottom: 16px;
+    }
+
+    .intake-desc {
+      font-size: 14.5px;
+      line-height: 1.75;
+      color: #6B6459;
+      margin-bottom: 32px;
+    }
+
+    .trust-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .trust-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13.5px;
+      color: #3A4049;
+    }
+
+    .trust-check {
+      width: 20px;
+      height: 20px;
+      background: #EFF6F3;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: #1F6F54;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .intake-divider {
+      width: 40px;
+      height: 2px;
+      background: #1F6F54;
+      margin: 28px 0;
+      border-radius: 2px;
+    }
+
+    .intake-note {
+      font-size: 11.5px;
+      color: #9C9386;
+      line-height: 1.6;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #E8E2D9;
+    }
+
+    .form-card {
+      background: #fff;
+      border: 1px solid #D6D0C8;
+      border-radius: 10px;
+      padding: 36px;
+      box-shadow: 0 2px 16px rgba(28,33,39,0.06);
+    }
+
+    .form-card-header {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #9C9386;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #EFECE3;
+    }
+
+    /* ── Footer ── */
+    footer {
+      background: #1C2127;
+      padding: 0 60px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .footer-col {
+      font-size: 13px;
+      color: rgba(251,248,242,0.45);
+    }
+
+    .footer-col.center { text-align: center; }
+    .footer-col.right  { text-align: right; }
+
+    @media (max-width: 900px) {
+      nav { padding: 0 24px; }
+      .nav-links { display: none; }
+      .hero { padding: 64px 24px 72px; }
+      .hero h1 { font-size: 36px; }
+      .hero-stats { gap: 28px; }
+      .practice-areas, .intake { padding: 64px 24px; }
+      .cards-grid { grid-template-columns: 1fr; }
+      .intake-inner { grid-template-columns: 1fr; gap: 40px; }
+      footer { flex-direction: column; height: auto; padding: 24px; gap: 8px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Navigation ── -->
+  <nav>
+    <div class="nav-logo">Smith <span>&amp;</span> Associates</div>
+    <ul class="nav-links">
+      <li><a href="#">Practice Areas</a></li>
+      <li><a href="#">Attorneys</a></li>
+      <li><a href="#" class="cta">Client Portal</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="hero">
+    <p class="hero-eyebrow">Established 1994 · New York, NY</p>
+    <h1>Trusted Legal Counsel<br>for Business &amp; Beyond</h1>
+    <p>
+      With over 30 years of experience, Smith &amp; Associates provides
+      comprehensive legal services to businesses and individuals across
+      the United States.
+    </p>
+    <div class="hero-actions">
+      <a href="#intake" class="btn-outline">Schedule Consultation</a>
+      <a href="#practice" class="btn-text-link">Our Practice Areas →</a>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="stat-value">30+</div>
+        <div class="stat-label">Years in practice</div>
+      </div>
+      <div>
+        <div class="stat-value">2,400</div>
+        <div class="stat-label">Matters resolved</div>
+      </div>
+      <div>
+        <div class="stat-value">98%</div>
+        <div class="stat-label">Client satisfaction</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Practice Areas ── -->
+  <section class="practice-areas" id="practice">
+    <p class="section-eyebrow">What we do</p>
+    <h2 class="section-title">Our Practice Areas</h2>
+    <p class="section-subtitle">
+      We handle complex commercial matters with the depth and attention
+      your business deserves.
+    </p>
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon">⚖️</div>
+        <h3 class="card-title">Corporate Law</h3>
+        <p class="card-desc">Strategic counsel for mergers, acquisitions, governance, and regulatory compliance across all industries.</p>
+        <a href="#" class="card-link">Learn more →</a>
+      </div>
+      <div class="card">
+        <div class="card-icon">📄</div>
+        <h3 class="card-title">Contract Review</h3>
+        <p class="card-desc">Thorough drafting and review of commercial agreements, vendor contracts, and partnership structures.</p>
+        <a href="#" class="card-link">Learn more →</a>
+      </div>
+      <div class="card">
+        <div class="card-icon">🏛️</div>
+        <h3 class="card-title">Business Formation</h3>
+        <p class="card-desc">From LLC to C-Corp, we guide founders through entity selection, structuring, and early-stage legal planning.</p>
+        <a href="#" class="card-link">Learn more →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Intake Form ── -->
+  <section class="intake" id="intake">
+    <div class="intake-inner">
+
+      <!-- Left -->
+      <div>
+        <p class="section-eyebrow">Get started</p>
+        <h2 class="intake-heading">Begin Working<br>With Us</h2>
+        <div class="intake-divider"></div>
+        <p class="intake-desc">
+          Complete the form and our team will reach out within one
+          business day to discuss your legal needs.
+        </p>
+        <ul class="trust-list">
+          <li><span class="trust-check">✓</span> Confidential &amp; Secure</li>
+          <li><span class="trust-check">✓</span> No obligation consultation</li>
+          <li><span class="trust-check">✓</span> Response within 24 hours</li>
+          <li><span class="trust-check">✓</span> Verified HMAC-signed submissions</li>
+        </ul>
+        <p class="intake-note">
+          All information submitted through this form is protected by
+          attorney-client privilege and handled in strict confidence by
+          our intake team.
+        </p>
+      </div>
+
+      <!-- Right — embed -->
+      <div>
+        <div class="form-card">
+          <div class="form-card-header">New Client Intake Form</div>
+        <script
+  src="http://localhost:3000/embed.js"
+  data-workflow-id="CRkrfYP1h0wNfZB7gVBs"
+  async
+></script>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <div class="footer-col">Smith &amp; Associates © 2026</div>
+    <div class="footer-col center">123 Legal Avenue, New York, NY 10001</div>
+    <div class="footer-col right">(212) 555-0190 · info@smithlaw.com</div>
+  </footer>
+
+</body>
+</html>

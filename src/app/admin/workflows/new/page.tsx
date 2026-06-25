@@ -44,12 +44,12 @@ export default function NewWorkflowPage() {
 
   return (
     <div
-      className="min-h-full flex items-start justify-center px-6 py-16"
-      style={{ background: "#F3F1EC" }}
+      className="flex items-start justify-center px-6 py-16"
+      style={{ background: "#F3F1EC", minHeight: "calc(100vh - 56px)" }}
     >
       <div
-        className="w-full max-w-md p-8 rounded-xl border"
-        style={{ background: "#FBF8F2", borderColor: "#C9C2B4" }}
+        className="w-full max-w-md p-8 rounded-xl"
+        style={{ background: "#FFFFFF", border: "1px solid #E4E0D6", boxShadow: "0 2px 12px rgba(28,33,39,0.06)" }}
       >
         <h1
           className={`text-2xl font-semibold mb-1 ${sourceSerif.className}`}

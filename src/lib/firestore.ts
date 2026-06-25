@@ -79,6 +79,27 @@ export async function getSubmissions(workflowId: string): Promise<Submission[]> 
   }));
 }
 
+export async function getSubmission(
+  workflowId: string,
+  submissionId: string
+): Promise<Submission | null> {
+  const snap = await db
+    .collection(WORKFLOWS)
+    .doc(workflowId)
+    .collection("entries")
+    .doc(submissionId)
+    .get();
+  if (!snap.exists) return null;
+  const d = snap.data()!;
+  return {
+    id: snap.id,
+    data: (d.data ?? {}) as Record<string, unknown>,
+    submittedAt: tsToISO(d.submittedAt),
+    originHost: (d.originHost as string) ?? "",
+    webhookStatus: d.webhookStatus as Submission["webhookStatus"],
+  };
+}
+
 export async function updateSubmission(
   workflowId: string,
   submissionId: string,
