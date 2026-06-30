@@ -1,36 +1,21 @@
-import { NextResponse } from "next/server";
-import { getWorkflow } from "@/lib/firestore";
 import { publicProjection } from "@/lib/projection";
-import { isOriginAllowed } from "@/lib/origin";
-import { corsHeaders, handleOptions } from "@/lib/cors";
+import { handleOptions, publicHeaders } from "@/lib/api/responses";
+import { validatePublicRequest } from "@/lib/guards/publicRoute";
+import { rateLimit, getClientIp, rateLimitResponse } from "@/lib/ratelimit";
 
 export async function GET(
   request: Request,
   { params }: { params: { workflowId: string } }
 ) {
-  const origin = request.headers.get("origin");
+  const ip = getClientIp(request);
+  const { success, resetAt } = rateLimit(`config:${ip}`, 30, 60_000);
+  if (!success) return rateLimitResponse(resetAt);
 
-  const headers = {
-    ...corsHeaders(origin),
-    "Cache-Control": "no-store, no-cache, must-revalidate, private",
-    "Pragma": "no-cache",
-    "Expires": "0",
-    "Vary": "Origin",
-  };
+  const result = await validatePublicRequest(request, params.workflowId);
+  if (!result.ok) return result.response;
 
-  const workflow = await getWorkflow(params.workflowId);
-
-  if (!workflow || workflow.status !== "published") {
-    return NextResponse.json({ error: "Not found" }, { status: 404, headers });
-  }
-
-  console.log("[config] origin:", origin, "| allowed:", workflow.allowedOrigins, "| result:", isOriginAllowed(origin, workflow.allowedOrigins));
-
-  if (!isOriginAllowed(origin, workflow.allowedOrigins)) {
-    return NextResponse.json({ error: "Origin not allowed" }, { status: 403, headers });
-  }
-
-  return NextResponse.json(publicProjection(workflow), { headers });
+  const { workflow, origin } = result;
+  return Response.json(publicProjection(workflow), { headers: publicHeaders(origin) });
 }
 
 export function OPTIONS(request: Request) {

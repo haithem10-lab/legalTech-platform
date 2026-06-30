@@ -1,10 +1,5 @@
 "use client";
 
-import { IBM_Plex_Mono, Inter } from "next/font/google";
-
-const mono  = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400"] });
-const inter = Inter({ subsets: ["latin"] });
-
 function fileIcon(filename: string): string {
   const lower = filename.toLowerCase();
   if (lower.endsWith(".pdf"))  return "📄";
@@ -38,15 +33,15 @@ export function FileRow({ filePath }: { filePath: string }) {
       borderRadius: 6, padding: "12px 16px",
     }}>
       <span style={{ fontSize: 18, flexShrink: 0, lineHeight: 1 }}>{icon}</span>
-      <span className={mono.className}
+      <span className="font-mono"
         style={{ fontSize: 13, color: "#1C2127", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
         {filename}
       </span>
       <button onClick={openFile}
-        className={`${inter.className} font-medium`}
+        className={`font-sans font-medium`}
         style={{
           fontSize: 12, padding: "4px 12px", borderRadius: 6, marginLeft: "auto",
-          border: "1px solid #1F6F54", color: "#1F6F54",
+          border: "1px solid #44645D", color: "#44645D",
           background: "transparent", cursor: "pointer", flexShrink: 0,
         }}
         onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#EFF6F3"; }}

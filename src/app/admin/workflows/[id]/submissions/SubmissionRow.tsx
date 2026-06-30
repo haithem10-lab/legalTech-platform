@@ -1,10 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { IBM_Plex_Mono, Inter } from "next/font/google";
-
-const mono  = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"] });
-const inter = Inter({ subsets: ["latin"] });
 
 const COLS = "180px 1fr 160px 90px 120px 150px";
 
@@ -12,14 +8,14 @@ function WebhookBadge({ status }: { status: string | null }) {
   if (!status) return <span style={{ fontSize: 13, color: "#C9C2B4" }}>—</span>;
   const ok = status === "delivered";
   return (
-    <span className={`inline-flex items-center gap-1.5 font-semibold ${inter.className}`}
+    <span className={`inline-flex items-center gap-1.5 font-semibold font-sans`}
       style={{
         fontSize: 12, borderRadius: 20, padding: "3px 10px",
         background: ok ? "#E6F0EA" : "#F6E5E2",
         border: `1px solid ${ok ? "#BCD9C8" : "#E2BBB4"}`,
-        color: ok ? "#1F6F54" : "#B23A2E",
+        color: ok ? "#44645D" : "#B23A2E",
       }}>
-      <span style={{ width: 5, height: 5, borderRadius: "50%", background: ok ? "#1F6F54" : "#B23A2E", flexShrink: 0 }} />
+      <span style={{ width: 5, height: 5, borderRadius: "50%", background: ok ? "#44645D" : "#B23A2E", flexShrink: 0 }} />
       {ok ? "Delivered" : "Failed"}
     </span>
   );
@@ -42,7 +38,7 @@ export function SubmissionRow({ id, workflowId, applicant, entityType, state, re
 
   return (
     <Link href={href}
-      className={`${inter.className}`}
+      className={`font-sans`}
       style={{
         display: "grid",
         gridTemplateColumns: COLS,
@@ -59,7 +55,7 @@ export function SubmissionRow({ id, workflowId, applicant, entityType, state, re
       onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "#FFFFFF"; }}
     >
       {/* Submission ID */}
-      <span className={`font-medium ${mono.className}`} style={{ fontSize: 12, color: "#1F6F54" }}>
+      <span className={`font-medium font-mono`} style={{ fontSize: 12, color: "#44645D" }}>
         {shortId}
       </span>
 
@@ -74,7 +70,7 @@ export function SubmissionRow({ id, workflowId, applicant, entityType, state, re
       </span>
 
       {/* State */}
-      <span className={mono.className} style={{ fontSize: 13, color: "#5C564C" }}>
+      <span className="font-mono" style={{ fontSize: 13, color: "#5C564C" }}>
         {state}
       </span>
 

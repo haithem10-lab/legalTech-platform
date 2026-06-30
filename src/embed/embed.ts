@@ -180,7 +180,7 @@ import type { PublicWorkflow } from "../types/workflow";
 
             const icon = ext === ".pdf" ? "📄" : ext === ".docx" ? "📝" : "🖼️";
             hint.textContent = `${icon} ${file.name}`;
-            hint.style.color = "#1F6F54";
+            hint.style.color = "#44645D";
             dropzone.style.borderColor = "#BCD9C8";
             dropzone.style.background = "#E6F0EA";
           } catch {

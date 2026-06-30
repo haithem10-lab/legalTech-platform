@@ -9,21 +9,21 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary:  { DEFAULT: "#1F6F54", hover: "#1A5E47" },
+        primary:  { DEFAULT: "#44645D", hover: "#374F49" },
         paper:    "#FBF8F2",
         canvas:   "#F3F1EC",
         ink:      "#1C2127",
         body2:    "#3A4049",
         muted:    "#8A8270",
         line: { DEFAULT: "#C9C2B4", light: "#E0D9CB", divider: "#EDE8DD", faint: "#F1ECE1" },
-        success:  { DEFAULT: "#1F6F54", bg: "#E6F0EA", border: "#BCD9C8", text2: "#3A6B57" },
+        success:  { DEFAULT: "#44645D", bg: "#E6F0EA", border: "#BCD9C8", text2: "#3A6B57" },
         danger:   { DEFAULT: "#B23A2E", bg: "#F6E5E2", border: "#E2BBB4" },
         draft:    { bg: "#F3EDD9", border: "#E2D7B0", text: "#8A6D1F", dot: "#B8902E" },
       },
       fontFamily: {
-        serif: ["Source Serif 4", "Georgia", "serif"],
-        sans:  ["Inter", "system-ui", "sans-serif"],
-        mono:  ["IBM Plex Mono", "ui-monospace", "monospace"],
+        serif: ["var(--font-serif)", "Georgia", "serif"],
+        sans:  ["var(--font-sans)", "system-ui", "sans-serif"],
+        mono:  ["var(--font-mono)", "ui-monospace", "monospace"],
       },
       borderRadius: {
         xs: "4px", sm: "6px", md: "8px", lg: "10px",

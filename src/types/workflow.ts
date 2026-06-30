@@ -70,7 +70,8 @@ export type WorkflowStatus = "draft" | "published" | "archived";
 
 export interface Workflow {
   id: string;
-  accountId: string;
+  orgId: string;
+  createdBy: string;
   name: string;
   status: WorkflowStatus;
   schema: Field[];
@@ -82,12 +83,33 @@ export interface Workflow {
   updatedAt: string;
 }
 
-export type PublicWorkflow = Omit<Workflow, "hmacSecret" | "accountId">;
+export type PublicWorkflow = Omit<Workflow, "hmacSecret" | "orgId" | "createdBy">;
 
 export interface Submission {
   id: string;
+  orgId: string;
   data: Record<string, unknown>;
   submittedAt: string;
   originHost: string;
   webhookStatus?: "delivered" | "failed";
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  domain: string;
+  plan: "trial" | "professional" | "enterprise";
+  ownerId: string;
+  firmSize?: string;
+  createdAt: string;
+}
+
+export interface OrgMember {
+  userId: string;
+  orgId: string;
+  email: string;
+  name: string;
+  role: "admin" | "lawyer";
+  status: "active" | "pending_approval" | "blocked";
+  joinedAt: string;
 }

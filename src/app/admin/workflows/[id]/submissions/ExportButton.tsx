@@ -1,9 +1,6 @@
 "use client";
 
-import { Inter } from "next/font/google";
 import type { Submission, Field } from "@/types/workflow";
-
-const inter = Inter({ subsets: ["latin"] });
 
 interface Props {
   submissions: Submission[];
@@ -62,7 +59,7 @@ export function ExportButton({ submissions, schema, workflowName }: Props) {
     <button
       onClick={handleExport}
       disabled={submissions.length === 0}
-      className={inter.className}
+      className="font-sans"
       style={{
         display: "inline-flex",
         alignItems: "center",

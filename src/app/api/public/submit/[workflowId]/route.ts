@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
 import { createHmac } from "crypto";
 import { z } from "zod";
-import { getWorkflow, writeSubmission, updateSubmission } from "@/lib/firestore";
-import { isOriginAllowed } from "@/lib/origin";
-import { corsHeaders, handleOptions } from "@/lib/cors";
+import { writeSubmission, updateSubmission } from "@/lib/db";
+import { corsHeaders, handleOptions } from "@/lib/api/responses";
+import { validatePublicRequest } from "@/lib/guards/publicRoute";
+import { rateLimit, getClientIp, rateLimitResponse } from "@/lib/ratelimit";
 import type { Field } from "@/types/workflow";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -65,29 +65,27 @@ export async function POST(
   request: Request,
   { params }: { params: { workflowId: string } }
 ) {
+  const ip = getClientIp(request);
+  const { success, resetAt } = rateLimit(`submit:${ip}`, 5, 60_000);
+  if (!success) return rateLimitResponse(resetAt);
+
   const { workflowId } = params;
-  const origin = request.headers.get("origin");
+
+  const guard = await validatePublicRequest(request, workflowId);
+  if (!guard.ok) return guard.response;
+
+  const { workflow, origin } = guard;
   const headers = corsHeaders(origin);
 
   let body: { data?: unknown } = {};
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400, headers });
-  }
-
-  const workflow = await getWorkflow(workflowId);
-
-  if (!workflow || workflow.status !== "published") {
-    return NextResponse.json({ error: "Not found" }, { status: 404, headers });
-  }
-
-  if (!isOriginAllowed(origin, workflow.allowedOrigins)) {
-    return NextResponse.json({ error: "Origin not allowed" }, { status: 403, headers });
+    return Response.json({ error: "Invalid JSON" }, { status: 400, headers });
   }
 
   if (!body.data || typeof body.data !== "object" || Array.isArray(body.data)) {
-    return NextResponse.json({ error: "Missing data object" }, { status: 400, headers });
+    return Response.json({ error: "Missing data object" }, { status: 400, headers });
   }
 
   const rawData = body.data as Record<string, unknown>;
@@ -114,25 +112,23 @@ export async function POST(
   }
 
   const zodSchema = buildSchema(workflow.schema);
-  const result = zodSchema.safeParse(sanitizedData);
+  const parsed = zodSchema.safeParse(sanitizedData);
 
-  if (!result.success) {
+  if (!parsed.success) {
     const errors: Record<string, string> = {};
-    for (const issue of result.error.issues) {
+    for (const issue of parsed.error.issues) {
       const key = String(issue.path[0] ?? "");
       if (key) errors[key] = issue.message;
     }
-    return NextResponse.json(
-      { error: "Validation failed", errors },
-      { status: 400, headers }
-    );
+    return Response.json({ error: "Validation failed", errors }, { status: 400, headers });
   }
 
   const submittedAt = new Date().toISOString();
-  const originHost = origin ?? "unknown";
+  const originHost  = origin ?? "unknown";
 
   const submissionId = await writeSubmission(workflowId, {
-    data: result.data as Record<string, unknown>,
+    orgId: workflow.orgId,
+    data: parsed.data as Record<string, unknown>,
     originHost,
   });
 
@@ -140,7 +136,7 @@ export async function POST(
     const webhookPayload = JSON.stringify({
       workflowId,
       submissionId,
-      data: result.data,
+      data: parsed.data,
       submittedAt,
       originHost,
     });
@@ -168,5 +164,5 @@ export async function POST(
       });
   }
 
-  return NextResponse.json({ ok: true, submissionId }, { status: 200, headers });
+  return Response.json({ ok: true, submissionId }, { status: 200, headers });
 }

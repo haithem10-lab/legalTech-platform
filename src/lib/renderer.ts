@@ -36,7 +36,7 @@ function buildField(field: Field, theme: Theme, gap: string, index: number): HTM
   const clause = document.createElement("span");
   clause.textContent = `1.${index + 1}`;
   clause.style.cssText =
-    "font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:#1F6F54;flex-shrink:0;letter-spacing:0.02em;";
+    "font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:#44645D;flex-shrink:0;letter-spacing:0.02em;";
 
   const labelEl = document.createElement("label");
   labelEl.textContent = field.label + (field.required ? " *" : "");
@@ -56,7 +56,7 @@ function buildField(field: Field, theme: Theme, gap: string, index: number): HTM
       input.required = field.required;
       input.placeholder = field.placeholder ?? "";
       input.style.cssText = inputStyle(theme.radius);
-      input.addEventListener("focus",  () => { input.style.borderColor = "#1F6F54"; });
+      input.addEventListener("focus",  () => { input.style.borderColor = "#44645D"; });
       input.addEventListener("blur",   () => { input.style.borderColor = "#D6D0C8"; });
       if (field.type === "text" && field.validation?.maxLength) {
         input.maxLength = field.validation.maxLength;
@@ -81,7 +81,7 @@ function buildField(field: Field, theme: Theme, gap: string, index: number): HTM
         o.textContent = opt;
         select.appendChild(o);
       });
-      select.addEventListener("focus", () => { select.style.borderColor = "#1F6F54"; });
+      select.addEventListener("focus", () => { select.style.borderColor = "#44645D"; });
       select.addEventListener("blur",  () => { select.style.borderColor = "#D6D0C8"; });
       wrapper.appendChild(select);
       break;
@@ -107,13 +107,13 @@ function buildField(field: Field, theme: Theme, gap: string, index: number): HTM
         radio.name = field.id;
         radio.value = opt;
         radio.required = field.required;
-        radio.style.cssText = "accent-color:#1F6F54;width:15px;height:15px;flex-shrink:0;";
+        radio.style.cssText = "accent-color:#44645D;width:15px;height:15px;flex-shrink:0;";
         radio.addEventListener("change", () => {
           group.querySelectorAll("label").forEach((l) => {
             (l as HTMLElement).style.borderColor = "#E8E2D9";
             (l as HTMLElement).style.background = "transparent";
           });
-          row.style.borderColor = "#1F6F54";
+          row.style.borderColor = "#44645D";
           row.style.background = "#F0FDF8";
           warning.style.display = radio.value.toLowerCase() === "high" ? "flex" : "none";
         });
@@ -143,7 +143,7 @@ function buildField(field: Field, theme: Theme, gap: string, index: number): HTM
       const acceptedLabel = document.createElement("p");
       acceptedLabel.textContent = "Accepted: PDF, DOCX, JPG, PNG · Max 10MB";
       acceptedLabel.style.cssText = "font-size:11px;color:#8A8378;margin:6px 0 0;";
-      dropzone.addEventListener("mouseenter", () => { dropzone.style.borderColor = "#1F6F54"; });
+      dropzone.addEventListener("mouseenter", () => { dropzone.style.borderColor = "#44645D"; });
       dropzone.addEventListener("mouseleave", () => { dropzone.style.borderColor = "#D6D0C8"; });
       dropzone.addEventListener("click", () => input.click());
       input.addEventListener("change", () => {
@@ -176,7 +176,7 @@ function buildField(field: Field, theme: Theme, gap: string, index: number): HTM
           si.type = sub.type === "number" ? "number" : sub.type;
           si.required = sub.required;
           si.style.cssText = `width:100%;padding:7px 10px;font-size:13px;border:1px solid #D6D0C8;border-radius:${theme.radius}px;outline:none;box-sizing:border-box;font-family:inherit;background:#fff;color:#1C2127;`;
-          si.addEventListener("focus", () => { si.style.borderColor = "#1F6F54"; });
+          si.addEventListener("focus", () => { si.style.borderColor = "#44645D"; });
           si.addEventListener("blur",  () => { si.style.borderColor = "#D6D0C8"; });
           sw.appendChild(sl);
           sw.appendChild(si);
@@ -197,7 +197,7 @@ function buildField(field: Field, theme: Theme, gap: string, index: number): HTM
       addBtn.type = "button";
       addBtn.textContent = "+ Add row";
       addBtn.style.cssText = `font-size:13px;padding:6px 14px;border:1px dashed #C9C2B4;border-radius:${theme.radius}px;background:transparent;cursor:pointer;font-family:inherit;color:#6B6459;margin-top:2px;transition:border-color 0.15s,color 0.15s;`;
-      addBtn.addEventListener("mouseenter", () => { addBtn.style.borderColor = "#1F6F54"; addBtn.style.color = "#1F6F54"; });
+      addBtn.addEventListener("mouseenter", () => { addBtn.style.borderColor = "#44645D"; addBtn.style.color = "#44645D"; });
       addBtn.addEventListener("mouseleave", () => { addBtn.style.borderColor = "#C9C2B4"; addBtn.style.color = "#6B6459"; });
       addBtn.addEventListener("click", addRow);
 

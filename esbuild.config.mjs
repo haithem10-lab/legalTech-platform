@@ -11,7 +11,6 @@ await esbuild.build({
   format: "iife",
   platform: "browser",
   target: ["es2017"],
-  // Path aliases — mirror tsconfig @/ alias for the renderer import
   alias: {
     "@/lib/renderer": "./src/lib/renderer.ts",
     "@/types/workflow": "./src/types/workflow.ts",

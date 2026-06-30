@@ -6,4 +6,7 @@ node_modules
 Dockerfile
 .dockerignore
 terraform/
-test-site.html
+test-site/
+webhook-test/
+public/uploads/
+*.tfvars

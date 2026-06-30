@@ -1,17 +1,13 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
-import { Source_Serif_4, Inter, IBM_Plex_Mono } from "next/font/google";
+
 import { ChevronLeft } from "lucide-react";
 import { authOptions } from "@/lib/auth";
-import { getWorkflow, getSubmissions } from "@/lib/firestore";
+import { getWorkflow, getSubmissions } from "@/lib/db";
 import { ExportButton } from "./ExportButton";
 import { SubmissionRow, COLS } from "./SubmissionRow";
 import type { Field, Submission } from "@/types/workflow";
-
-const serif = Source_Serif_4({ subsets: ["latin"], weight: ["400", "600"] });
-const inter = Inter({ subsets: ["latin"] });
-const mono  = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"] });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -59,7 +55,7 @@ export default async function SubmissionsPage({ params }: { params: { id: string
   if (!session) redirect("/login");
 
   const workflow    = await getWorkflow(params.id);
-  if (!workflow || workflow.accountId !== session.user.accountId) notFound();
+  if (!workflow || workflow.orgId !== session.user.orgId) notFound();
 
   const submissions = await getSubmissions(params.id);
   const schema      = workflow.schema;
@@ -72,7 +68,7 @@ export default async function SubmissionsPage({ params }: { params: { id: string
     : `${submissions.length} submissions · all webhooks delivered`;
 
   return (
-    <div className={`min-h-full ${inter.className}`} style={{ background: "#F5F4EF" }}>
+    <div className="flex-1 font-sans" style={{ background: "#F3F1EC" }}>
 
       {/* ── Header ── */}
       <div style={{ background: "#FBF8F2", borderBottom: "1px solid #C9C2B4", padding: "20px 32px" }}>
@@ -88,7 +84,7 @@ export default async function SubmissionsPage({ params }: { params: { id: string
 
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className={`font-semibold ${serif.className}`}
+              <h1 className={`font-semibold font-serif`}
                 style={{ fontSize: 24, color: "#1C2127", margin: "0 0 4px", lineHeight: 1.2 }}>
                 {workflow.name}
               </h1>
@@ -106,7 +102,7 @@ export default async function SubmissionsPage({ params }: { params: { id: string
         {submissions.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-xl py-20 gap-3"
             style={{ background: "#FFFFFF" }}>
-            <p className={`font-semibold ${serif.className}`} style={{ fontSize: 20, color: "#1C2127", margin: 0 }}>
+            <p className={`font-semibold font-serif`} style={{ fontSize: 20, color: "#1C2127", margin: 0 }}>
               No submissions yet
             </p>
             <p style={{ fontSize: 13, color: "#8A8270", margin: 0 }}>
@@ -116,7 +112,7 @@ export default async function SubmissionsPage({ params }: { params: { id: string
         ) : (
           <div className="rounded-xl overflow-hidden" style={{ background: "#FFFFFF" }}>
             {/* Column headers */}
-            <div className={`${inter.className}`}
+            <div className={`font-sans`}
               style={{ display: "grid", gridTemplateColumns: COLS, padding: "12px 20px", background: "#FBF8F2", borderBottom: "1px solid #EFECE3" }}>
               {["Submission ID", "Applicant", "Entity type", "State", "Received", "Webhook"].map((h) => (
                 <span key={h} style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#8A8270" }}>

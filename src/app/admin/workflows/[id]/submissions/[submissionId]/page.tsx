@@ -1,20 +1,16 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
-import { Source_Serif_4, Inter, IBM_Plex_Mono } from "next/font/google";
+
 import { ChevronLeft } from "lucide-react";
 import { authOptions } from "@/lib/auth";
-import { getWorkflow, getSubmission } from "@/lib/firestore";
+import { getWorkflow, getSubmission } from "@/lib/db";
 import { FileRow } from "./FileRow";
 
 function isFilePath(value: string) {
   return value.startsWith("/uploads/") || value.startsWith("submissions/");
 }
 import type { Field } from "@/types/workflow";
-
-const serif = Source_Serif_4({ subsets: ["latin"], weight: ["400", "600"] });
-const inter = Inter({ subsets: ["latin"] });
-const mono  = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"] });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -37,7 +33,7 @@ function fieldValue(data: Record<string, unknown>, field: Field): string {
 
 function SectionLabel({ children }: { children: string }) {
   return (
-    <p className={`uppercase font-bold ${inter.className}`}
+    <p className={`uppercase font-bold font-sans`}
       style={{ fontSize: 10, letterSpacing: "0.08em", color: "#8A8270", margin: 0 }}>
       {children}
     </p>
@@ -57,14 +53,14 @@ function WebhookStatusBadge({ status }: { status: string | null | undefined }) {
   if (!status) return null;
   const ok = status === "delivered";
   return (
-    <span className={`inline-flex items-center gap-1.5 font-semibold ${inter.className}`}
+    <span className={`inline-flex items-center gap-1.5 font-semibold font-sans`}
       style={{
         fontSize: 12, borderRadius: 20, padding: "4px 11px",
         background: ok ? "#E6F0EA" : "#F6E5E2",
         border: `1px solid ${ok ? "#BCD9C8" : "#E2BBB4"}`,
-        color: ok ? "#1F6F54" : "#B23A2E",
+        color: ok ? "#44645D" : "#B23A2E",
       }}>
-      <span style={{ width: 6, height: 6, borderRadius: "50%", background: ok ? "#1F6F54" : "#B23A2E", flexShrink: 0 }} />
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: ok ? "#44645D" : "#B23A2E", flexShrink: 0 }} />
       {ok ? "Delivered" : "Failed"}
     </span>
   );
@@ -85,7 +81,7 @@ export default async function SubmissionDetailPage({
     getSubmission(params.id, params.submissionId),
   ]);
 
-  if (!workflow || workflow.accountId !== session.user.accountId) notFound();
+  if (!workflow || workflow.orgId !== session.user.orgId) notFound();
   if (!submission) notFound();
 
   // Primary name from first text/email field
@@ -96,7 +92,7 @@ export default async function SubmissionDetailPage({
   const webhookOk  = submission.webhookStatus === "delivered";
 
   return (
-    <div className={`min-h-full ${inter.className}`} style={{ background: "#F5F4EF" }}>
+    <div className="flex-1 font-sans" style={{ background: "#F3F1EC" }}>
 
       {/* ── Top bar ── */}
       <div style={{ background: "#FBF8F2", borderBottom: "1px solid #C9C2B4", padding: "0 32px" }}>
@@ -116,11 +112,11 @@ export default async function SubmissionDetailPage({
             <div className="min-w-0 flex-1">
               {/* Name + ID badge */}
               <div className="flex items-center gap-3 flex-wrap mb-2">
-                <h1 className={`font-semibold ${serif.className}`}
+                <h1 className={`font-semibold font-serif`}
                   style={{ fontSize: 28, color: "#1C2127", margin: 0, lineHeight: 1.15 }}>
                   {primaryName}
                 </h1>
-                <span className={`${mono.className}`}
+                <span className={`font-mono`}
                   style={{ fontSize: 12, background: "#F3F1EC", border: "1px solid #E4E0D6", borderRadius: 6, padding: "3px 8px", color: "#5C564C" }}>
                   {shortId}
                 </span>
@@ -158,8 +154,8 @@ export default async function SubmissionDetailPage({
                   <div key={field.id} className="flex gap-4 px-5 py-4"
                     style={{ borderBottom: isLast ? "none" : "1px solid #F3F1EC", alignItems: "flex-start" }}>
                     {/* Clause number */}
-                    <span className={`flex-shrink-0 font-semibold ${mono.className}`}
-                      style={{ fontSize: 12, color: "#1F6F54", minWidth: 32, paddingTop: 2 }}>
+                    <span className={`flex-shrink-0 font-semibold font-mono`}
+                      style={{ fontSize: 12, color: "#44645D", minWidth: 32, paddingTop: 2 }}>
                       1.{idx + 1}
                     </span>
                     {/* Label + value */}
@@ -195,7 +191,7 @@ export default async function SubmissionDetailPage({
                     {/* Endpoint */}
                     <div className="flex items-center gap-1.5 overflow-hidden">
                       <span style={{ fontSize: 11, color: "#8A8270", flexShrink: 0 }}>POST</span>
-                      <span className={`${mono.className} truncate`}
+                      <span className={`font-mono truncate`}
                         style={{ fontSize: 11, color: "#5C564C" }}>
                         {workflow.webhookUrl}
                       </span>
@@ -204,15 +200,15 @@ export default async function SubmissionDetailPage({
                     {/* Status row */}
                     {submission.webhookStatus ? (
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: webhookOk ? "#1F6F54" : "#B23A2E", flexShrink: 0 }} />
+                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: webhookOk ? "#44645D" : "#B23A2E", flexShrink: 0 }} />
                         <span style={{ fontSize: 13, color: "#1C2127", fontWeight: 500 }}>
                           {webhookOk ? "Delivered" : "Failed"}
                         </span>
-                        <span className={`${mono.className}`}
+                        <span className={`font-mono`}
                           style={{
                             fontSize: 11, borderRadius: 4, padding: "2px 7px",
                             background: webhookOk ? "#E6F0EA" : "#F6E5E2",
-                            color: webhookOk ? "#1F6F54" : "#B23A2E",
+                            color: webhookOk ? "#44645D" : "#B23A2E",
                           }}>
                           {webhookOk ? "200 OK" : "5xx Error"}
                         </span>
@@ -246,7 +242,7 @@ export default async function SubmissionDetailPage({
                   label: "Submission ID",
                   value: submission.id,
                   mono: true,
-                  color: "#1F6F54",
+                  color: "#44645D",
                 },
                 {
                   label: "Submitted at",
@@ -258,14 +254,14 @@ export default async function SubmissionDetailPage({
                   label: "Signature",
                   value: webhookOk ? "verified" : submission.webhookStatus === "failed" ? "failed" : "—",
                   mono: true,
-                  color: webhookOk ? "#1F6F54" : submission.webhookStatus === "failed" ? "#B23A2E" : "#8A8270",
+                  color: webhookOk ? "#44645D" : submission.webhookStatus === "failed" ? "#B23A2E" : "#8A8270",
                 },
               ].map(({ label, value, mono: isMono, color }, i, arr) => (
                 <div key={label}
                   className="flex items-start justify-between gap-3 px-4 py-3"
                   style={{ borderBottom: i < arr.length - 1 ? "1px solid #F3F1EC" : "none" }}>
                   <span style={{ fontSize: 13, color: "#8A8270", flexShrink: 0 }}>{label}</span>
-                  <span className={isMono ? mono.className : ""}
+                  <span className={isMono ? "font-mono" : ""}
                     style={{ fontSize: isMono ? 12 : 13, color, wordBreak: "break-all", textAlign: "right" }}>
                     {value}
                   </span>

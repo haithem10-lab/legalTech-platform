@@ -17,11 +17,3 @@ export function isOriginAllowed(
   const normalised = origin.replace(/\/$/, "");
   return allowedOrigins.includes(normalised);
 }
-
-export function corsHeaders(origin: string | null): Record<string, string> {
-  if (!origin) return {};
-  return {
-    "Access-Control-Allow-Origin": origin,
-    Vary: "Origin",
-  };
-}

@@ -1,68 +1,137 @@
 "use client";
 
+import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import { FileText, LogOut } from "lucide-react";
-import { IBM_Plex_Mono, Inter } from "next/font/google";
+import { FileText, LogOut, LayoutGrid, Users } from "lucide-react";
+
 import { useWorkflowName } from "@/contexts/WorkflowNameContext";
 
-const mono  = IBM_Plex_Mono({ subsets: ["latin"], weight: ["500"] });
-const inter = Inter({ subsets: ["latin"] });
+interface Props {
+  name?: string | null;
+  email?: string | null;
+  orgName?: string | null;
+  role?: "admin" | "lawyer" | null;
+  pendingCount?: number;
+}
 
-interface Props { email?: string | null }
+const ROLE_LABEL: Record<string, string> = {
+  admin: "Admin",
+  lawyer: "Lawyer",
+};
 
-export function AdminNav({ email }: Props) {
+export function AdminNav({ name, email, orgName, role, pendingCount = 0 }: Props) {
   const { workflowName } = useWorkflowName();
   const pathname = usePathname();
 
-  // Only show workflow name when inside the builder
   const inBuilder = /\/admin\/workflows\/[^/]+\/build/.test(pathname ?? "");
-  const showName  = inBuilder && !!workflowName;
+  const showWorkflowName = inBuilder && !!workflowName;
 
-  // Derive initials from email
-  const initials = email ? email.slice(0, 2).toUpperCase() : "–";
+  const inSettings = (pathname ?? "").startsWith("/admin/settings");
+  const inWorkflows = !inSettings;
+
+  // Initials: prefer display name, fall back to email
+  const initials = name
+    ? name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase()
+    : email
+    ? email.slice(0, 2).toUpperCase()
+    : "–";
+
+  const displayName = name ?? email ?? "";
 
   return (
     <header
-      className={`flex items-center h-14 px-6 gap-4 shrink-0 ${inter.className}`}
+      className={`flex items-center h-14 px-6 gap-4 shrink-0 font-sans`}
       style={{ background: "#1C2127", borderBottom: "1px solid #2A3038" }}
     >
       {/* Left: logo */}
-      <div className="flex items-center gap-2 min-w-[160px]">
-        <FileText size={18} color="#1F6F54" />
-        <span className="font-semibold text-sm tracking-wide text-white">
+      <div className="flex items-center gap-2" style={{ minWidth: 160 }}>
+        <FileText size={18} color="#44645D" />
+        <span className="font-semibold text-sm tracking-wide" style={{ color: "#F1EFE9" }}>
           LegalTech
         </span>
       </div>
 
-      {/* Center: active workflow name (builder only) */}
+      {/* Center: nav links (normal pages) or workflow name (builder) */}
       <div className="flex-1 flex justify-center">
-        {showName && (
-          <span
-            className={`text-sm truncate max-w-xs ${mono.className}`}
-            style={{ color: "#7A8290", fontSize: 12 }}
-          >
+        {showWorkflowName ? (
+          <span className="truncate max-w-xs font-sans" style={{ fontSize: 12, color: "#7A8290" }}>
             {workflowName}
           </span>
+        ) : (
+          <nav className="flex items-center gap-1">
+            <Link
+              href="/admin/workflows"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all"
+              style={{
+                color: inWorkflows ? "#E8E4DC" : "#7A8290",
+                background: inWorkflows ? "#2A3038" : "transparent",
+                textDecoration: "none",
+              }}
+            >
+              <LayoutGrid size={13} />
+              Workflows
+            </Link>
+            {role === "admin" && (
+              <Link
+                href="/admin/settings/team"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all"
+                style={{
+                  color: inSettings ? "#E8E4DC" : "#7A8290",
+                  background: inSettings ? "#2A3038" : "transparent",
+                  textDecoration: "none",
+                  position: "relative",
+                }}
+              >
+                <Users size={13} />
+                Team
+                {pendingCount > 0 && (
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    width: 16, height: 16, borderRadius: "50%",
+                    background: "#E53E3E", color: "#fff",
+                    fontSize: 9, fontWeight: 700, marginLeft: 2,
+                  }}>
+                    {pendingCount}
+                  </span>
+                )}
+              </Link>
+            )}
+          </nav>
         )}
       </div>
 
-      {/* Right: avatar + sign-out */}
-      <div className="min-w-[160px] flex items-center justify-end gap-3">
-        {/* Avatar circle */}
-        <div
-          className="flex items-center justify-center flex-shrink-0 font-semibold"
-          style={{
-            width: 30, height: 30, borderRadius: "50%",
-            background: "#1F6F54",
-            color: "#fff", fontSize: 11,
-            letterSpacing: "0.04em",
-          }}
-        >
-          {initials}
+      {/* Right: name + role badge + sign out */}
+      <div className="flex items-center justify-end gap-3" style={{ minWidth: 160 }}>
+        {/* Avatar + name */}
+        <div className="flex items-center gap-2">
+          <div
+            className="flex items-center justify-center flex-shrink-0 font-semibold"
+            style={{
+              width: 28, height: 28, borderRadius: "50%",
+              background: "#44645D", color: "#fff",
+              fontSize: 10, letterSpacing: "0.04em",
+            }}
+          >
+            {initials}
+          </div>
+          <div className="flex flex-col leading-none gap-0.5 hidden sm:flex">
+            <span style={{ fontSize: 12, color: "#CBD5E1", fontWeight: 500 }}>{displayName}</span>
+            {role && (
+              <span
+                style={{
+                  fontSize: 10, fontWeight: 600,
+                  color: role === "admin" ? "#44645D" : "#7A8290",
+                  textTransform: "uppercase", letterSpacing: "0.06em",
+                }}
+              >
+                {ROLE_LABEL[role] ?? role}
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Sign out button */}
+        {/* Sign out */}
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
           className="flex items-center gap-1.5 font-medium transition-all"

@@ -1,6 +1,6 @@
 import type { Workflow, PublicWorkflow } from "@/types/workflow";
 
 export function publicProjection(doc: Workflow): PublicWorkflow {
-  const { hmacSecret: _hmacSecret, accountId: _accountId, ...publicFields } = doc;
+  const { hmacSecret: _hmacSecret, orgId: _orgId, createdBy: _createdBy, ...publicFields } = doc;
   return publicFields;
 }

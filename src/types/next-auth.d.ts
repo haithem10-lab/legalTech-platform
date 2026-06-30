@@ -4,19 +4,30 @@ import "next-auth/jwt";
 declare module "next-auth" {
   interface Session {
     user: {
-      accountId: string;
+      id: string;
       email: string;
       name?: string | null;
       image?: string | null;
+      orgId: string;
+      orgName: string;
+      role: "admin" | "lawyer";
+      status: "active" | "pending_approval" | "blocked";
     };
   }
   interface User {
-    accountId: string;
+    orgId: string;
+    orgName: string;
+    role: "admin" | "lawyer";
+    status: "active" | "pending_approval" | "blocked";
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-    accountId: string;
+    uid: string;
+    orgId: string;
+    orgName: string;
+    role: "admin" | "lawyer";
+    status: "active" | "pending_approval" | "blocked";
   }
 }

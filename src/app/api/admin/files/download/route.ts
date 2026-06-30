@@ -1,33 +1,33 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getStorage } from "@/lib/storage";
+import { jsonError } from "@/lib/api/responses";
+import { env } from "@/lib/env";
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) return jsonError("Unauthorized", 401);
 
-  const path = req.nextUrl.searchParams.get("path") ?? "";
+    const path = req.nextUrl.searchParams.get("path") ?? "";
+    if (!path.startsWith("submissions/") || path.includes("..")) {
+      return jsonError("Invalid path", 400);
+    }
 
-  if (!path.startsWith("submissions/") || path.includes("..")) {
-    return NextResponse.json({ error: "Invalid path" }, { status: 400 });
-  }
+    const bucket = env.gcs.bucketName;
+    if (!bucket) return jsonError("Storage not configured", 500);
 
-  const bucket = process.env.GCS_BUCKET_NAME;
-  if (!bucket) {
-    return NextResponse.json({ error: "Storage not configured" }, { status: 500 });
-  }
-
-  const filename = path.split("/").pop() ?? "file";
-
-  const [signedUrl] = await getStorage()
-    .bucket(bucket)
-    .file(path)
-    .getSignedUrl({
+    const filename = path.split("/").pop() ?? "file";
+    const [signedUrl] = await getStorage().bucket(bucket).file(path).getSignedUrl({
       version: "v4",
       action: "read",
       expires: Date.now() + 15 * 60 * 1000,
     });
 
-  return NextResponse.json({ downloadUrl: signedUrl, filename });
+    return Response.json({ downloadUrl: signedUrl, filename });
+  } catch (err) {
+    console.error("[GET /api/admin/files/download]", err);
+    return jsonError("Internal server error", 500);
+  }
 }

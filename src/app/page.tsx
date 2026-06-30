@@ -1,10 +1,6 @@
 import Link from "next/link";
-import { Source_Serif_4, Inter, IBM_Plex_Mono } from "next/font/google";
-import { FileText, Layers, Zap, ShieldCheck, ArrowRight } from "lucide-react";
 
-const sourceSerif = Source_Serif_4({ subsets: ["latin"], weight: ["400", "600", "700"] });
-const inter = Inter({ subsets: ["latin"] });
-const ibmMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400"] });
+import { FileText, Layers, Zap, ShieldCheck, ArrowRight } from "lucide-react";
 
 // ─── Nav ──────────────────────────────────────────────────────────────────────
 
@@ -31,30 +27,47 @@ function Nav() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <FileText size={20} color="#1F6F54" />
+          <FileText size={20} color="#44645D" />
           <span
-            className={sourceSerif.className}
+            className="font-serif"
             style={{ fontSize: 18, fontWeight: 600, color: "#1C2127" }}
           >
             LegalTech
           </span>
         </div>
 
-        <Link
-          href="/login"
-          className={inter.className}
-          style={{
-            fontSize: 13,
-            fontWeight: 500,
-            color: "#1C2127",
-            border: "1px solid #C9C2B4",
-            borderRadius: 7,
-            padding: "6px 16px",
-            textDecoration: "none",
-          }}
-        >
-          Sign in
-        </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Link
+            href="/login"
+            className="font-sans"
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              color: "#1C2127",
+              border: "1px solid #C9C2B4",
+              borderRadius: 7,
+              padding: "6px 16px",
+              textDecoration: "none",
+            }}
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/signup"
+            className="font-sans"
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#FBF8F2",
+              background: "#44645D",
+              borderRadius: 7,
+              padding: "6px 16px",
+              textDecoration: "none",
+            }}
+          >
+            Get started
+          </Link>
+        </div>
       </div>
     </header>
   );
@@ -74,13 +87,13 @@ function Hero() {
     >
       <div style={{ maxWidth: 700, margin: "0 auto" }}>
         <p
-          className={inter.className}
+          className="font-sans"
           style={{
             fontSize: 11,
             fontWeight: 700,
             letterSpacing: "0.08em",
             textTransform: "uppercase",
-            color: "#1F6F54",
+            color: "#44645D",
             marginBottom: 20,
           }}
         >
@@ -88,7 +101,7 @@ function Hero() {
         </p>
 
         <h1
-          className={sourceSerif.className}
+          className="font-serif"
           style={{
             fontSize: "clamp(36px, 5vw, 54px)",
             fontWeight: 700,
@@ -102,7 +115,7 @@ function Hero() {
         </h1>
 
         <p
-          className={inter.className}
+          className="font-sans"
           style={{
             fontSize: 17,
             lineHeight: 1.65,
@@ -111,31 +124,48 @@ function Hero() {
             margin: "0 auto 40px",
           }}
         >
-          Build once. Embed anywhere. Receive signed, verified submissions
-          instantly.
+          Built for law firms. Your team builds forms, your clients fill
+          them, you receive verified submissions — all under your firm&apos;s brand.
         </p>
 
-        <Link
-          href="/login"
-          className={inter.className}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            background: "#1F6F54",
-            color: "#FBF8F2",
-            fontSize: 15,
-            fontWeight: 600,
-            padding: "13px 28px",
-            borderRadius: 9,
-            textDecoration: "none",
-          }}
-        >
-          Start building <ArrowRight size={16} />
-        </Link>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
+          <Link
+            href="/signup"
+            className="font-sans"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              background: "#44645D",
+              color: "#FBF8F2",
+              fontSize: 15,
+              fontWeight: 600,
+              padding: "13px 28px",
+              borderRadius: 9,
+              textDecoration: "none",
+            }}
+          >
+            Start building <ArrowRight size={16} />
+          </Link>
+          <Link
+            href="/login"
+            className="font-sans"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 14,
+              fontWeight: 500,
+              color: "#5C564C",
+              textDecoration: "none",
+            }}
+          >
+            Sign in
+          </Link>
+        </div>
 
         <p
-          className={inter.className}
+          className="font-sans"
           style={{ fontSize: 12, color: "#A89F8C", marginTop: 18 }}
         >
           Used by law firms to automate client intake
@@ -149,17 +179,17 @@ function Hero() {
 
 const FEATURES = [
   {
-    icon: <Layers size={22} color="#1F6F54" />,
+    icon: <Layers size={22} color="#44645D" />,
     title: "No-code builder",
     desc: "Add fields, customize themes, preview live. No developer needed.",
   },
   {
-    icon: <Zap size={22} color="#1F6F54" />,
+    icon: <Zap size={22} color="#44645D" />,
     title: "Instant everywhere",
     desc: "Change your form once. It updates on every embedded site on the next page load.",
   },
   {
-    icon: <ShieldCheck size={22} color="#1F6F54" />,
+    icon: <ShieldCheck size={22} color="#44645D" />,
     title: "Signed & verified",
     desc: "Every submission arrives with an HMAC-SHA256 signature your backend can verify.",
   },
@@ -176,7 +206,7 @@ function Features() {
     >
       <div style={{ maxWidth: 1080, margin: "0 auto" }}>
         <p
-          className={inter.className}
+          className="font-sans"
           style={{
             fontSize: 11,
             fontWeight: 700,
@@ -222,7 +252,7 @@ function Features() {
                 {f.icon}
               </div>
               <h3
-                className={sourceSerif.className}
+                className="font-serif"
                 style={{
                   fontSize: 18,
                   fontWeight: 600,
@@ -233,7 +263,7 @@ function Features() {
                 {f.title}
               </h3>
               <p
-                className={inter.className}
+                className="font-sans"
                 style={{ fontSize: 14, lineHeight: 1.6, color: "#6B7280" }}
               >
                 {f.desc}
@@ -271,7 +301,7 @@ function HowItWorks() {
     <section style={{ background: "#FBF8F2", padding: "72px 24px" }}>
       <div style={{ maxWidth: 640, margin: "0 auto" }}>
         <p
-          className={inter.className}
+          className="font-sans"
           style={{
             fontSize: 11,
             fontWeight: 700,
@@ -285,7 +315,7 @@ function HowItWorks() {
           How it works
         </p>
         <h2
-          className={sourceSerif.className}
+          className="font-serif"
           style={{
             fontSize: 30,
             fontWeight: 600,
@@ -316,12 +346,12 @@ function HowItWorks() {
                 }}
               >
                 <div
-                  className={ibmMono.className}
+                  className="font-mono"
                   style={{
                     width: 36,
                     height: 36,
                     borderRadius: "50%",
-                    background: "#1F6F54",
+                    background: "#44645D",
                     color: "#FBF8F2",
                     display: "flex",
                     alignItems: "center",
@@ -348,7 +378,7 @@ function HowItWorks() {
 
               <div style={{ paddingTop: 6 }}>
                 <h3
-                  className={sourceSerif.className}
+                  className="font-serif"
                   style={{
                     fontSize: 18,
                     fontWeight: 600,
@@ -359,7 +389,7 @@ function HowItWorks() {
                   {step.title}
                 </h3>
                 <p
-                  className={inter.className}
+                  className="font-sans"
                   style={{ fontSize: 14, lineHeight: 1.65, color: "#6B7280" }}
                 >
                   {step.desc}
@@ -392,7 +422,7 @@ function CodePreview() {
     >
       <div style={{ maxWidth: 600, margin: "0 auto", textAlign: "center" }}>
         <p
-          className={inter.className}
+          className="font-sans"
           style={{
             fontSize: 11,
             fontWeight: 700,
@@ -405,7 +435,7 @@ function CodePreview() {
           One line of code
         </p>
         <h2
-          className={sourceSerif.className}
+          className="font-serif"
           style={{
             fontSize: 26,
             fontWeight: 600,
@@ -426,7 +456,7 @@ function CodePreview() {
           }}
         >
           <pre
-            className={ibmMono.className}
+            className="font-mono"
             style={{
               fontSize: 13,
               lineHeight: 1.7,
@@ -441,7 +471,7 @@ function CodePreview() {
         </div>
 
         <p
-          className={inter.className}
+          className="font-sans"
           style={{ fontSize: 13, color: "#8A8270" }}
         >
           That&apos;s all your client needs on their site
@@ -470,13 +500,13 @@ function Footer() {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <FileText size={16} color="#4CAF82" />
           <span
-            className={sourceSerif.className}
+            className="font-serif"
             style={{ fontSize: 14, fontWeight: 600, color: "#FBF8F2" }}
           >
             LegalTech
           </span>
           <span
-            className={inter.className}
+            className="font-sans"
             style={{ fontSize: 12, color: "#6B7280" }}
           >
             © 2026
@@ -484,17 +514,13 @@ function Footer() {
         </div>
 
         <div style={{ display: "flex", gap: 24 }}>
-          <Link
-            href="/login"
-            className={inter.className}
-            style={{ fontSize: 13, color: "#8A8270", textDecoration: "none" }}
-          >
+          <Link href="/signup" className="font-sans" style={{ fontSize: 13, color: "#8A8270", textDecoration: "none" }}>
+            Sign up
+          </Link>
+          <Link href="/login" className="font-sans" style={{ fontSize: 13, color: "#8A8270", textDecoration: "none" }}>
             Sign in
           </Link>
-          <span
-            className={inter.className}
-            style={{ fontSize: 13, color: "#8A8270" }}
-          >
+          <span className="font-sans" style={{ fontSize: 13, color: "#8A8270" }}>
             Documentation
           </span>
         </div>

@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import OpenAI from "openai";
 import { authOptions } from "@/lib/auth";
+import { jsonError } from "@/lib/api/responses";
+import { env } from "@/lib/env";
 import type { Field, Theme } from "@/types/workflow";
 
 const systemPrompt = `You are a legal form builder assistant.
@@ -95,63 +97,69 @@ function validateTheme(t: unknown): Theme {
     font:            ["Inter","Georgia","Courier New"].includes(theme.font as string) ? (theme.font as string) : "Inter",
     radius:          typeof theme.radius === "number"          ? Math.min(16, Math.max(0, theme.radius)) : 8,
     density:         theme.density === "spacious"              ? "spacious"            : "compact",
-    buttonColor:     typeof theme.buttonColor === "string"     ? theme.buttonColor     : "#1F6F54",
+    buttonColor:     typeof theme.buttonColor === "string"     ? theme.buttonColor     : "#44645D",
     buttonTextColor: theme.buttonTextColor === "#1C2127"       ? "#1C2127"             : "#FFFFFF",
   };
 }
 
 function fallbackTheme(): Theme {
-  return { bgColor: "#FBF8F2", font: "Inter", radius: 8, density: "compact", buttonColor: "#1F6F54", buttonTextColor: "#FFFFFF" };
+  return { bgColor: "#FBF8F2", font: "Inter", radius: 8, density: "compact", buttonColor: "#44645D", buttonTextColor: "#FFFFFF" };
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const { prompt } = await req.json();
-  if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
-    return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
-  }
-
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-  let raw: string;
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user",   content: prompt.trim().slice(0, 300) },
-      ],
-      temperature: 0.7,
-      max_tokens: 1500,
-      response_format: { type: "json_object" },
-    });
-    raw = completion.choices[0]?.message?.content ?? "";
-  } catch {
-    return NextResponse.json({ error: "AI generation failed" }, { status: 500 });
+    const session = await getServerSession(authOptions);
+    if (!session) return jsonError("Unauthorized", 401);
+
+    const body = await req.json().catch(() => ({}));
+    const { prompt } = body;
+    if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
+      return jsonError("Prompt is required", 400);
+    }
+
+    const openai = new OpenAI({ apiKey: env.openai.apiKey });
+
+    let raw: string;
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user",   content: prompt.trim().slice(0, 300) },
+        ],
+        temperature: 0.7,
+        max_tokens: 1500,
+        response_format: { type: "json_object" },
+      });
+      raw = completion.choices[0]?.message?.content ?? "";
+    } catch {
+      return jsonError("AI generation failed", 500);
+    }
+
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      return jsonError("Invalid AI response", 500);
+    }
+
+    if (!Array.isArray(parsed.schema) || !parsed.theme) {
+      return jsonError("Schema validation failed", 500);
+    }
+
+    let schema: Field[];
+    try {
+      schema = (parsed.schema as unknown[]).map((f, i) => validateField(f, i));
+    } catch {
+      return jsonError("Schema validation failed", 500);
+    }
+
+    const theme = validateTheme(parsed.theme);
+    const name  = typeof parsed.name === "string" ? parsed.name : "Generated Form";
+
+    return Response.json({ name, schema, theme });
+  } catch (err) {
+    console.error("[POST /api/admin/ai/generate-layout]", err);
+    return jsonError("Internal server error", 500);
   }
-
-  let parsed: Record<string, unknown>;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    return NextResponse.json({ error: "Invalid AI response" }, { status: 500 });
-  }
-
-  if (!Array.isArray(parsed.schema) || !parsed.theme) {
-    return NextResponse.json({ error: "Schema validation failed" }, { status: 500 });
-  }
-
-  let schema: Field[];
-  try {
-    schema = (parsed.schema as unknown[]).map((f, i) => validateField(f, i));
-  } catch {
-    return NextResponse.json({ error: "Schema validation failed" }, { status: 500 });
-  }
-
-  const theme  = validateTheme(parsed.theme);
-  const name   = typeof parsed.name === "string" ? parsed.name : "Generated Form";
-
-  return NextResponse.json({ name, schema, theme });
 }
