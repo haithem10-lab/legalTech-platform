@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-const COLS = "180px 1fr 160px 90px 120px 150px";
+const COLS = "180px 1fr 160px 120px 150px";
 
 function WebhookBadge({ status }: { status: string | null }) {
   if (!status) return <span style={{ fontSize: 13, color: "#C9C2B4" }}>—</span>;
@@ -26,13 +26,12 @@ interface Props {
   workflowId: string;
   applicant: string;
   entityType: string;
-  state: string;
   receivedLabel: string;
   webhookStatus: string | null;
   isFirst: boolean;
 }
 
-export function SubmissionRow({ id, workflowId, applicant, entityType, state, receivedLabel, webhookStatus, isFirst }: Props) {
+export function SubmissionRow({ id, workflowId, applicant, entityType, receivedLabel, webhookStatus, isFirst }: Props) {
   const href = `/admin/workflows/${workflowId}/submissions/${id}`;
   const shortId = `SUB_${id.slice(0, 8)}`;
 
@@ -67,11 +66,6 @@ export function SubmissionRow({ id, workflowId, applicant, entityType, state, re
       {/* Entity type */}
       <span style={{ fontSize: 13, color: "#5C564C", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 12 }}>
         {entityType}
-      </span>
-
-      {/* State */}
-      <span className="font-mono" style={{ fontSize: 13, color: "#5C564C" }}>
-        {state}
       </span>
 
       {/* Received */}

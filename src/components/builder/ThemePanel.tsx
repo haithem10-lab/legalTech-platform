@@ -135,15 +135,6 @@ export function ThemePanel({ theme, onChange }: ThemePanelProps) {
         />
       </div>
 
-      {/* Accent locked */}
-      <div>
-        <div className="mb-2"><Eyebrow>Accent</Eyebrow></div>
-        <div className="flex items-center gap-2.5 px-3 py-2 rounded-md border border-line" style={{ background: "#F3F1EC" }}>
-          <span style={{ width: 18, height: 18, borderRadius: 4, background: "#44645D", flexShrink: 0 }} />
-          <span className={`flex-1 font-mono`} style={{ fontSize: 12, color: "#44645D" }}>#44645D</span>
-          <span style={{ fontSize: 11, color: "#8A8270", fontWeight: 500 }}>Locked</span>
-        </div>
-      </div>
     </div>
   );
 }

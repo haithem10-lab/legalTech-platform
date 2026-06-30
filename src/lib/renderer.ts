@@ -1,5 +1,29 @@
 import type { Field, Theme } from "@/types/workflow";
 
+// ─── Color helpers ─────────────────────────────────────────────────────────────
+
+function isDark(hex: string): boolean {
+  const h = hex.replace("#", "");
+  if (h.length !== 6) return false;
+  const r = parseInt(h.slice(0, 2), 16) / 255;
+  const g = parseInt(h.slice(2, 4), 16) / 255;
+  const b = parseInt(h.slice(4, 6), 16) / 255;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 0.35;
+}
+
+interface RenderColors {
+  text: string;
+  muted: string;
+  subLabel: string;
+  divider: string;
+}
+
+function themeColors(bgColor: string): RenderColors {
+  return isDark(bgColor)
+    ? { text: "#E8E4DC", muted: "#9B9387", subLabel: "#A09890", divider: "rgba(255,255,255,0.14)" }
+    : { text: "#1C2127", muted: "#8A8270", subLabel: "#6B6459", divider: "#E8E2D9" };
+}
+
 // ─── Style helpers ─────────────────────────────────────────────────────────────
 
 function inputStyle(radius: number): string {
@@ -24,7 +48,7 @@ function wrapperStyle(gap: string): string {
 
 // ─── Field builder ─────────────────────────────────────────────────────────────
 
-function buildField(field: Field, theme: Theme, gap: string, index: number): HTMLElement {
+function buildField(field: Field, theme: Theme, gap: string, index: number, colors: RenderColors): HTMLElement {
   const wrapper = document.createElement("div");
   wrapper.setAttribute("data-field-id", field.id);
   wrapper.style.cssText = wrapperStyle(gap);
@@ -40,7 +64,7 @@ function buildField(field: Field, theme: Theme, gap: string, index: number): HTM
 
   const labelEl = document.createElement("label");
   labelEl.textContent = field.label + (field.required ? " *" : "");
-  labelEl.style.cssText = "font-size:13px;font-weight:500;color:#1C2127;line-height:1.4;";
+  labelEl.style.cssText = `font-size:13px;font-weight:500;color:${colors.text};line-height:1.4;`;
 
   labelRow.appendChild(clause);
   labelRow.appendChild(labelEl);
@@ -99,7 +123,7 @@ function buildField(field: Field, theme: Theme, gap: string, index: number): HTM
       field.options.forEach((opt) => {
         const row = document.createElement("label");
         row.style.cssText =
-          "display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:#1C2127;padding:8px 12px;border:1px solid #E8E2D9;border-radius:" +
+          `display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:${colors.text};padding:8px 12px;border:1px solid ${colors.divider};border-radius:` +
           theme.radius +
           "px;transition:border-color 0.15s,background 0.15s;";
         const radio = document.createElement("input");
@@ -171,7 +195,7 @@ function buildField(field: Field, theme: Theme, gap: string, index: number): HTM
           sw.style.cssText = "flex:1;min-width:0;";
           const sl = document.createElement("label");
           sl.textContent = sub.label;
-          sl.style.cssText = "display:block;font-size:12px;font-weight:500;color:#6B6459;margin-bottom:4px;";
+          sl.style.cssText = `display:block;font-size:12px;font-weight:500;color:${colors.subLabel};margin-bottom:4px;`;
           const si = document.createElement("input");
           si.type = sub.type === "number" ? "number" : sub.type;
           si.required = sub.required;
@@ -210,7 +234,7 @@ function buildField(field: Field, theme: Theme, gap: string, index: number): HTM
   if (field.helperText) {
     const p = document.createElement("p");
     p.textContent = field.helperText;
-    p.style.cssText = "font-size:12px;color:#8A8270;margin:5px 0 0;";
+    p.style.cssText = `font-size:12px;color:${colors.muted};margin:5px 0 0;`;
     wrapper.appendChild(p);
   }
 
@@ -228,12 +252,13 @@ export function renderForm(
   container.innerHTML = "";
 
   const gap = theme.density === "compact" ? "14px" : "22px";
+  const colors = themeColors(theme.bgColor);
 
   container.style.cssText = `
     font-family: ${theme.font}, system-ui, sans-serif;
     background: ${theme.bgColor};
     padding: 38px 40px 40px 70px;
-    color: #1C2127;
+    color: ${colors.text};
     position: relative;
   `;
 
@@ -243,16 +268,16 @@ export function renderForm(
   // ── Form header ────────────────────────────────────────────────────────────
   if (workflowName) {
     const header = document.createElement("div");
-    header.style.cssText = "margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid #E8E2D9;";
+    header.style.cssText = `margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid ${colors.divider};`;
 
     const title = document.createElement("h2");
     title.textContent = workflowName;
     title.style.cssText =
-      "font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:600;color:#1C2127;margin:0 0 5px;line-height:1.25;";
+      `font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:600;color:${colors.text};margin:0 0 5px;line-height:1.25;`;
 
     const sub = document.createElement("p");
     sub.textContent = "New Client Intake — please complete all clauses below.";
-    sub.style.cssText = "font-size:13px;color:#8A8270;margin:0;";
+    sub.style.cssText = `font-size:13px;color:${colors.muted};margin:0;`;
 
     header.appendChild(title);
     header.appendChild(sub);
@@ -261,7 +286,7 @@ export function renderForm(
 
   // ── Fields ─────────────────────────────────────────────────────────────────
   if (schema.length > 0) {
-    schema.forEach((field, i) => form.appendChild(buildField(field, theme, gap, i)));
+    schema.forEach((field, i) => form.appendChild(buildField(field, theme, gap, i, colors)));
 
     const btnPad  = theme.buttonSize === "sm" ? "9px 14px" : theme.buttonSize === "lg" ? "16px 22px" : "12px 16px";
     const btnSize = theme.buttonSize === "sm" ? "13px"     : theme.buttonSize === "lg" ? "15px"      : "14px";
@@ -290,7 +315,7 @@ export function renderForm(
   } else {
     const empty = document.createElement("p");
     empty.textContent = "No fields yet — add one in the builder.";
-    empty.style.cssText = "font-size:13px;color:#9CA3AF;text-align:center;padding:24px 0;margin:0;";
+    empty.style.cssText = `font-size:13px;color:${colors.muted};text-align:center;padding:24px 0;margin:0;`;
     form.appendChild(empty);
   }
 

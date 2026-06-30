@@ -72,7 +72,7 @@ function ConfigPanel({ field, onUpdate }: { field: Field; onUpdate: (u: Partial<
   return (
     <div className="px-3 py-3 bg-canvas border-t border-line-divider flex flex-col gap-3">
       <div><label className={lbl}>Label</label>
-        <input value={field.label} onChange={(e) => onUpdate({ label: e.target.value })} className={inp} /></div>
+        <input value={field.label} onChange={(e) => onUpdate({ label: e.target.value })} className={inp} placeholder="e.g. Full name" /></div>
       <div><label className={lbl}>Placeholder</label>
         <input value={field.placeholder ?? ""} onChange={(e) => onUpdate({ placeholder: e.target.value })} className={inp} /></div>
       <div><label className={lbl}>Helper text</label>

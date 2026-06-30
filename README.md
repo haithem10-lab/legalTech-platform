@@ -1,6 +1,6 @@
 # LegalTech — Embeddable Legal Intake Platform
 
-A Stripe-like embeddable form platform for law firms. Build intake forms once, embed them anywhere with a single `<script>` tag, receive signed and verified submissions instantly.
+A multi-tenant embeddable form platform for law firms. Build intake forms once, embed them anywhere with a single `<script>` tag, receive signed and verified submissions instantly.
 
 ---
 
@@ -8,9 +8,10 @@ A Stripe-like embeddable form platform for law firms. Build intake forms once, e
 
 1. [Local Development Setup](#local-development-setup)
 2. [Project Structure](#project-structure)
-3. [Security Protocol — HMAC Webhook Signing](#security-protocol--hmac-webhook-signing)
-4. [Embed Script — How Config is Fetched on Client Load](#embed-script--how-config-is-fetched-on-client-load)
-5. [API Reference](#api-reference)
+3. [Authentication & Multi-Tenancy](#authentication--multi-tenancy)
+4. [Security Protocol — HMAC Webhook Signing](#security-protocol--hmac-webhook-signing)
+5. [Embed Script — How Config is Fetched on Client Load](#embed-script--how-config-is-fetched-on-client-load)
+6. [API Reference](#api-reference)
 
 ---
 
@@ -22,7 +23,7 @@ A Stripe-like embeddable form platform for law firms. Build intake forms once, e
 |------|---------|
 | Node.js | 18+ |
 | npm | 9+ |
-| Firebase project | Admin SDK enabled |
+| Firebase project | Auth + Firestore enabled |
 
 ---
 
@@ -45,17 +46,13 @@ npm install
    - `client_email` → `FIREBASE_CLIENT_EMAIL`
    - `private_key` → `FIREBASE_PRIVATE_KEY`
 
-Enable **Firestore** in the Firebase console (Native mode).
+Enable **Firestore** (Native mode) and **Firebase Authentication** (Email/Password provider) in the Firebase console.
 
 ---
 
 ### Step 3 — Environment variables
 
-Copy the example file and fill in your values:
-
-```bash
-cp .env.local.example .env.local
-```
+Create `.env.local` at the project root:
 
 ```env
 # NextAuth — generate secret with: openssl rand -base64 32
@@ -78,25 +75,15 @@ OPENAI_API_KEY=
 
 ---
 
-### Step 4 — Seed a user account
+### Step 4 — Create your first account
 
-The platform uses NextAuth with a credentials provider. Create a user directly in Firestore:
+The platform uses a self-service signup flow. No manual seeding required.
 
-**Collection:** `accounts`
-
-```json
-{
-  "email": "lawyer@example.com",
-  "passwordHash": "<bcrypt hash>",
-  "createdAt": "<timestamp>"
-}
-```
-
-You can generate a bcrypt hash with:
-
-```bash
-node -e "const b=require('bcryptjs');b.hash('yourpassword',10).then(console.log)"
-```
+1. Start the dev server: `npm run dev`
+2. Open [http://localhost:3000/signup](http://localhost:3000/signup)
+3. Sign up with a **work email** (personal addresses like Gmail are blocked)
+4. The first person from a domain becomes the **admin** of a new organization
+5. Subsequent signups from the same domain go through an admin approval step
 
 ---
 
@@ -144,6 +131,7 @@ Then open [http://localhost:8090](http://localhost:8090). The form fetches its c
 | `npm run build` | Production build |
 | `npm run start` | Start production server |
 | `npm run build:embed` | Bundle `embed.ts` → `public/embed.js` |
+
 ---
 
 ## Project Structure
@@ -151,54 +139,118 @@ Then open [http://localhost:8090](http://localhost:8090). The form fetches its c
 ```
 src/
 ├── app/
-│   ├── admin/                    # Admin UI (builder, submissions)
-│   │   └── workflows/
-│   │       ├── page.tsx          # Workflows list
-│   │       ├── [id]/build/       # Form builder
-│   │       └── [id]/submissions/ # Submission viewer
+│   ├── admin/                        # Admin portal (session-gated)
+│   │   ├── layout.tsx                # Shared nav + pending-member count
+│   │   ├── workflows/
+│   │   │   ├── page.tsx              # Workflows list
+│   │   │   ├── new/                  # Create workflow
+│   │   │   └── [id]/
+│   │   │       ├── build/            # Form builder (fields, theme, preview)
+│   │   │       └── submissions/      # Submission viewer + detail
+│   │   └── settings/
+│   │       └── team/                 # Team management (admin only)
 │   ├── api/
-│   │   ├── admin/                # Session-gated admin APIs
-│   │   │   ├── workflows/        # CRUD for workflows
-│   │   │   ├── ai/               # AI layout generator
-│   │   │   └── files/            # Signed download URLs
-│   │   └── public/               # Unauthenticated public APIs
-│   │       ├── config/[id]/      # Returns public form schema
-│   │       ├── submit/[id]/      # Accepts form submissions
-│   │       └── upload/           # File upload endpoint
-│   └── login/                    # Auth page
+│   │   ├── auth/                     # Authentication routes
+│   │   │   ├── signup/               # Register + create/join organization
+│   │   │   ├── check-domain/         # Check if domain has existing org
+│   │   │   ├── forgot-password/      # Send password reset email
+│   │   │   └── reset-password/       # Apply new password via oobCode
+│   │   ├── admin/                    # Session-gated admin APIs
+│   │   │   ├── workflows/            # CRUD for workflows
+│   │   │   ├── team/                 # Approve / reject / block members
+│   │   │   ├── ai/                   # AI layout generator (GPT-4o)
+│   │   │   └── files/                # Signed download URLs
+│   │   └── public/                   # Unauthenticated public APIs
+│   │       ├── config/[id]/          # Returns public form schema
+│   │       ├── submit/[id]/          # Accepts form submissions
+│   │       └── upload/               # File upload endpoint
+│   ├── login/                        # Sign-in page
+│   ├── signup/                       # Registration page (2-step)
+│   ├── forgot-password/              # Request password reset
+│   ├── reset-password/               # Set new password
+│   └── pending/                      # Waiting-for-approval screen
 ├── components/
-│   └── AdminNav.tsx              # Top navigation bar
+│   ├── AdminNav.tsx                  # Top navigation bar
+│   └── builder/                      # Builder sub-components
+│       ├── FieldList.tsx             # Left panel — field list + AI generator
+│       ├── FieldRow.tsx              # Individual draggable field row + config
+│       ├── ThemePanel.tsx            # Right panel — theme controls
+│       ├── PreviewPane.tsx           # Centre — live form preview
+│       ├── EmbedModal.tsx            # Embed code + security setup modal
+│       └── shared.tsx                # StatusPill, Seg, Eyebrow components
 ├── contexts/
-│   └── WorkflowNameContext.tsx   # Shares active workflow name to nav
+│   └── WorkflowNameContext.tsx       # Shares active workflow name to nav
 ├── embed/
-│   └── embed.ts                  # Embed script source (compiled to public/embed.js)
+│   └── embed.ts                      # Embed script source (compiled → public/embed.js)
 ├── lib/
-│   ├── auth.ts                   # NextAuth config
-│   ├── cors.ts                   # CORS helpers
-│   ├── firebase.ts               # Firebase Admin init
-│   ├── firestore.ts              # Firestore data access layer
-│   ├── origin.ts                 # Origin allow-list check
-│   ├── projection.ts             # Strips secrets before public response
-│   ├── renderer.ts               # DOM form renderer (shared by embed + preview)
-│   └── storage.ts                # GCS client (for legacy signed URLs)
+│   ├── auth.ts                       # NextAuth config + JWT/session callbacks
+│   ├── blocked-domains.ts            # Personal email domain blocklist
+│   ├── db/                           # Firestore data access layer
+│   │   ├── index.ts                  # Re-exports all db functions
+│   │   ├── workflows.ts              # Workflow CRUD
+│   │   ├── submissions.ts            # Submission read/write
+│   │   └── utils.ts                  # Shared collection names + mappers
+│   ├── email.ts                      # Email sender (logs to console in dev)
+│   ├── env.ts                        # Validated environment variables
+│   ├── firebase.ts                   # Firebase Admin SDK init
+│   ├── guards/
+│   │   └── publicRoute.ts            # Shared auth guard for public API routes
+│   ├── api/
+│   │   └── responses.ts              # Shared response helpers (jsonError, corsHeaders)
+│   ├── origin.ts                     # Origin allow-list check
+│   ├── projection.ts                 # Strips secrets before public response
+│   ├── ratelimit.ts                  # In-memory rate limiter
+│   ├── renderer.ts                   # DOM form renderer (shared by embed + preview)
+│   └── storage.ts                    # GCS client (file download signing)
 ├── types/
-│   └── workflow.ts               # TypeScript types: Field, Theme, Workflow, Submission
+│   ├── workflow.ts                   # Field, Theme, Workflow, Submission types
+│   └── next-auth.d.ts                # Augmented session types (orgId, role, status)
 public/
-├── embed.js                      # Compiled embed bundle (committed)
-└── uploads/                      # Local file uploads (dev only)
+├── embed.js                          # Compiled embed bundle (committed)
+└── uploads/                          # Local file uploads (dev only, git-ignored)
 ```
+
+---
+
+## Authentication & Multi-Tenancy
+
+### Organization model
+
+Every user belongs to exactly one **organization** (a law firm). Organizations are identified by email domain — everyone with `@smithlaw.com` belongs to the same org.
+
+| Role | Permissions |
+|------|------------|
+| `admin` | Full access: build forms, view submissions, manage team, access settings |
+| `lawyer` | View workflows and submissions within their org |
+
+### Signup flow
+
+1. **Step 1 — Personal info**: name, work email, password
+   - Personal email domains (Gmail, Yahoo, etc.) are rejected
+   - Domain is checked against existing organizations
+2. **Step 2 — Firm info**:
+   - **Scenario A** — First from domain: enter firm name → become admin, access granted immediately
+   - **Scenario B** — Org already exists: request sent to admin for approval, user lands on `/pending`
+
+### Member states
+
+| Status | Meaning |
+|--------|---------|
+| `active` | Can log in and access the platform |
+| `pending_approval` | Signed up, waiting for admin to approve |
+| `blocked` | Explicitly blocked by admin — cannot log in |
+
+### Password reset
+
+Initiated via `/forgot-password`. An email is sent with a one-time link to `/reset-password?oobCode=...`. In development the email is printed to the terminal instead of being sent.
 
 ---
 
 ## Security Protocol — HMAC Webhook Signing
 
-Every time a form is submitted, the platform delivers the data to the law firm's configured webhook URL. To let your server verify that the request genuinely came from this platform and was not tampered with in transit, every outgoing webhook is signed using **HMAC-SHA256**.
+Every form submission fires a signed `POST` to the workflow's configured webhook URL.
 
-### How signing works
-
-**1. Payload construction**
-
-The raw JSON string sent in the `POST` body is:
+### Payload
 
 ```json
 {
@@ -210,42 +262,44 @@ The raw JSON string sent in the `POST` body is:
 }
 ```
 
-**2. Signature generation**
+### Signature generation
 
 ```ts
 import { createHmac } from "crypto";
 
 const sig = createHmac("sha256", workflow.hmacSecret)
-  .update(webhookPayload)   // the raw JSON string, not the parsed object
+  .update(webhookPayload)   // raw JSON string
   .digest("hex");
 ```
 
-The `hmacSecret` is a unique secret generated per workflow and stored in Firestore. It is **never** returned to the public config endpoint — only the server holds it.
+The signature is delivered as the `X-Signature` header (64 hex chars). The `hmacSecret` is per-workflow, stored in Firestore, and never returned by the public config endpoint.
 
-**3. Delivery**
-
-The signature is sent as the `X-Signature` header alongside the payload:
-
-```
-POST https://yourserver.com/webhook
-Content-Type: application/json
-X-Signature: a3f1e8c2d4...   (64 hex chars)
-X-Workflow-Id: abc123
-```
-
-> **Important:** Always use `timingSafeEqual` instead of `===` to compare signatures. String equality short-circuits on the first differing character, which leaks timing information that an attacker can exploit to forge signatures.
+> **Always** verify with `timingSafeEqual` — never `===`. String equality short-circuits and leaks timing information.
 
 ### Finding your secret
 
-In the builder, click **Embed code → Security setup**. The signing secret is shown masked. Click the eye icon to reveal it, or **Regenerate** to rotate it (this will break existing receivers until they update).
+In the builder → **Embed code → Security setup**. The secret is masked by default. Click the eye icon to reveal or **Regenerate** to rotate it.
 
 ### Origin allow-list
 
-Before accepting any public API request, the server checks the `Origin` header against the workflow's `allowedOrigins` list:
+Before accepting any public API request, the server checks the `Origin` header against `allowedOrigins`:
 
-- **Empty list → deny everything.** A newly created workflow rejects all embeds until you explicitly add an origin.
-- **Null origin** (e.g. `file://`, sandboxed iframe) is allowed only in local development.
+- **Empty list → deny everything.** Add at least one origin before going live.
 - Trailing slashes are normalised before comparison.
+
+### Rate limiting
+
+All sensitive endpoints are rate-limited per IP (and per email for auth endpoints):
+
+| Endpoint | Limit |
+|----------|-------|
+| `POST /api/auth/signup` | 3 requests / 15 min per IP |
+| `POST /api/auth/forgot-password` | 3 requests / 15 min per IP + 3 / 15 min per email |
+| `GET /api/public/config/:id` | 30 requests / min per IP |
+| `POST /api/public/submit/:id` | 5 requests / min per IP |
+| `POST /api/public/upload` | 10 requests / min per IP |
+
+> The rate limiter is in-process (no Redis). On multi-instance deployments (Vercel) each instance has its own counter. For production use, replace `src/lib/ratelimit.ts` with a shared store (Upstash Redis / Vercel KV).
 
 ---
 
@@ -263,9 +317,7 @@ The embed system is a single self-contained IIFE bundle (`public/embed.js`) buil
 ></script>
 ```
 
-The script tag is loaded asynchronously so it never blocks page rendering. The `data-workflow-id` attribute tells the script which form to load.
-
-### Step-by-step client load sequence
+### Load sequence
 
 ```
 Host page loads
@@ -274,63 +326,36 @@ Host page loads
 embed.js executes (IIFE)
      │
      ├─ 1. Locate own <script> tag via querySelectorAll('[data-workflow-id]')
-     │       Reads workflowId and derives appOrigin from script.src URL
+     │       Reads workflowId, derives appOrigin from script.src
      │
-     ├─ 2. Insert a <div data-legalform="..."> mount point
-     │       Inserted immediately after the script tag in the DOM
+     ├─ 2. Insert <div data-legalform="..."> mount point after the script tag
      │       Shows "Loading form…" placeholder
      │
-     ├─ 3. GET /api/public/config/{workflowId}?t={Date.now()}
-     │       Cache-busting query param + Cache-Control: no-store headers
-     │       origin header is sent automatically by the browser
-     │
-     │       Server checks:
-     │         • Workflow exists and is published
-     │         • Origin is in allowedOrigins list
-     │         • Strips hmacSecret and accountId (publicProjection)
+     ├─ 3. GET /api/public/config/{workflowId}
+     │       Server checks: workflow exists + published, origin allowed
+     │       Response strips hmacSecret (publicProjection)
      │
      ├─ 4. On 403 → "This form is not available on this domain."
      │     On 404 → "Form not found or unavailable."
-     │     On error → generic error message
      │
      ├─ 5. On 200 → renderForm(wrapper, schema, theme, name)
-     │       Builds the entire form in DOM (no framework, no shadow DOM)
-     │       CSS isolation via `all: initial` wrapper style
-     │       Renders fields in order: text, email, dropdown, radio, file, dynamic-list
-     │       Applies theme: bgColor, font, radius, density, buttonColor, buttonSize
+     │       Builds entire form in DOM (no framework, no shadow DOM)
+     │       Applies theme: bgColor, font, radius, density, buttonColor
+     │       Text colors auto-adapt for dark backgrounds (Slate mode)
      │
-     ├─ 6. File fields upload immediately on selection
+     ├─ 6. File fields: upload on selection
      │       POST /api/public/upload (multipart/form-data)
-     │       Server validates type + size, saves to /public/uploads/
-     │       Returns { filePath: "/uploads/uuid.ext" }
-     │       filePath stored on fieldEl.dataset.filePath for submit collection
+     │       Returns { filePath } stored on field dataset for submit
      │
-     └─ 7. Form submit intercepted (preventDefault)
-             Collects field values by iterating schema + [data-field-id] markers
-             POST /api/public/submit/{workflowId} with { data: {...} }
-             Server validates with Zod, writes to Firestore, fires webhook
-             On success → replaces form with "Thank you" confirmation
-             On 400 with field errors → inline error messages per field
+     └─ 7. Submit intercepted (preventDefault)
+             POST /api/public/submit/{workflowId} → Zod validation → Firestore
+             On success → "Thank you" confirmation
+             On 400 → inline field errors
 ```
-
-
-
-This ensures that when a lawyer updates their form and saves, the next page load on the embedded site always fetches the latest schema.
 
 ### CSS isolation
 
-The rendered form is wrapped in a `div` with `all: initial` to prevent host-page stylesheets from leaking into the form:
-
-```ts
-wrapper.style.cssText = `
-  all: initial;
-  display: block;
-  font-family: ${workflow.theme.font}, system-ui, sans-serif;
-  box-sizing: border-box;
-`;
-```
-
-All element styles are applied inline, making the form render consistently regardless of the host site's CSS framework.
+All element styles are applied inline. The mount wrapper uses `all: initial` to prevent host-page CSS from leaking into the form.
 
 ---
 
@@ -342,15 +367,25 @@ All element styles are applied inline, making the form render consistently regar
 |--------|------|-------------|
 | `GET` | `/api/public/config/:workflowId` | Returns public form schema + theme. Requires valid origin. |
 | `POST` | `/api/public/submit/:workflowId` | Accepts form submission. Fires webhook. |
-| `POST` | `/api/public/upload` | Uploads a file (multipart/form-data). Returns `{ filePath }`. |
+| `POST` | `/api/public/upload` | Uploads a file (multipart). Returns `{ filePath }`. |
+
+### Auth
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/auth/signup` | Register user + create or join organization. |
+| `GET` | `/api/auth/check-domain?domain=` | Check if domain has an existing organization. |
+| `POST` | `/api/auth/forgot-password` | Send password reset email. |
+| `POST` | `/api/auth/reset-password` | Apply new password using Firebase oobCode. |
 
 ### Admin (session required)
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/admin/workflows` | List all workflows for the authenticated account. |
+| `GET` | `/api/admin/workflows` | List all workflows for the authenticated org. |
 | `POST` | `/api/admin/workflows` | Create a new workflow. |
 | `GET` | `/api/admin/workflows/:id` | Get a single workflow (includes hmacSecret). |
 | `PATCH` | `/api/admin/workflows/:id` | Update schema, theme, name, status, webhook, origins. |
+| `POST` | `/api/admin/team/approve` | Approve, reject, block, or unblock a team member (admin only). |
 | `POST` | `/api/admin/ai/generate-layout` | Generate schema + theme from a natural language prompt (GPT-4o). |
-| `GET` | `/api/admin/files/download?path=` | Generate a signed read URL for a GCS-stored file. |
+| `GET` | `/api/admin/files/download?path=` | Generate a signed read URL for a stored file. |

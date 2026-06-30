@@ -22,7 +22,7 @@ const FIELD_TYPES: { type: Field["type"]; label: string }[] = [
 
 function createField(type: Field["type"]): Field {
   const id   = `field-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`;
-  const base = { id, label: "New field", required: false };
+  const base = { id, label: "", required: false };
   switch (type) {
     case "text":         return { ...base, type: "text" };
     case "email":        return { ...base, type: "email" };

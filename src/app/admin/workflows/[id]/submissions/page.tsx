@@ -5,7 +5,6 @@ import { getServerSession } from "next-auth";
 import { ChevronLeft } from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import { getWorkflow, getSubmissions } from "@/lib/db";
-import { ExportButton } from "./ExportButton";
 import { SubmissionRow, COLS } from "./SubmissionRow";
 import type { Field, Submission } from "@/types/workflow";
 
@@ -41,11 +40,7 @@ function extractCols(submission: Submission, schema: Field[]) {
   const entityField = usable.find((f) => f.id !== applicantField?.id);
   const entityType = entityField ? val(entityField.id) : "—";
 
-  // State: field whose label contains "state" / "jurisdiction"
-  const stateField = schema.find((f) => /state|jurisdiction/i.test(f.label));
-  const state = stateField ? val(stateField.id).slice(0, 3).toUpperCase() : "—";
-
-  return { applicant, entityType, state };
+  return { applicant, entityType };
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -90,10 +85,7 @@ export default async function SubmissionsPage({ params }: { params: { id: string
               </h1>
               <p style={{ fontSize: 13, color: "#8A8270", margin: 0 }}>{subtitle}</p>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <ExportButton submissions={submissions} schema={workflow.schema} workflowName={workflow.name} />
             </div>
-          </div>
         </div>
       </div>
 
@@ -114,7 +106,7 @@ export default async function SubmissionsPage({ params }: { params: { id: string
             {/* Column headers */}
             <div className={`font-sans`}
               style={{ display: "grid", gridTemplateColumns: COLS, padding: "12px 20px", background: "#FBF8F2", borderBottom: "1px solid #EFECE3" }}>
-              {["Submission ID", "Applicant", "Entity type", "State", "Received", "Webhook"].map((h) => (
+              {["Submission ID", "Applicant", "Entity type", "Received", "Webhook"].map((h) => (
                 <span key={h} style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#8A8270" }}>
                   {h}
                 </span>
@@ -123,7 +115,7 @@ export default async function SubmissionsPage({ params }: { params: { id: string
 
             {/* Rows */}
             {submissions.map((s, i) => {
-              const { applicant, entityType, state } = extractCols(s, schema);
+              const { applicant, entityType } = extractCols(s, schema);
               return (
                 <SubmissionRow
                   key={s.id}
@@ -131,7 +123,6 @@ export default async function SubmissionsPage({ params }: { params: { id: string
                   workflowId={params.id}
                   applicant={applicant}
                   entityType={entityType}
-                  state={state}
                   receivedLabel={relativeTime(s.submittedAt)}
                   webhookStatus={s.webhookStatus ?? null}
                   isFirst={i === 0}
