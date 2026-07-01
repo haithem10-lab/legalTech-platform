@@ -11,14 +11,14 @@ declare module "next-auth" {
       orgId: string;
       orgName: string;
       role: "admin" | "lawyer";
-      status: "active" | "pending_approval" | "blocked";
+      status: "unverified" | "pending_approval" | "active" | "blocked";
     };
   }
   interface User {
     orgId: string;
     orgName: string;
     role: "admin" | "lawyer";
-    status: "active" | "pending_approval" | "blocked";
+    status: "unverified" | "pending_approval" | "active" | "blocked";
   }
 }
 
@@ -28,6 +28,6 @@ declare module "next-auth/jwt" {
     orgId: string;
     orgName: string;
     role: "admin" | "lawyer";
-    status: "active" | "pending_approval" | "blocked";
+    status: "unverified" | "pending_approval" | "active" | "blocked";
   }
 }

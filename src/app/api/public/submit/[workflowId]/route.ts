@@ -6,8 +6,6 @@ import { validatePublicRequest } from "@/lib/guards/publicRoute";
 import { rateLimit, getClientIp, rateLimitResponse } from "@/lib/ratelimit";
 import type { Field } from "@/types/workflow";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function sanitize(value: unknown): string {
   if (typeof value !== "string") return "";
   return value.replace(/<[^>]*>/g, "").trim();
@@ -102,7 +100,8 @@ export async function POST(
               k,
               typeof v === "string" ? sanitize(v) : v,
             ])
-          );
+          )
+          ;
         }
         return row;
       });
