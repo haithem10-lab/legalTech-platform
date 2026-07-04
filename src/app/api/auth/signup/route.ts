@@ -73,6 +73,7 @@ export async function POST(request: Request) {
     // ── PATH A: first from this domain → create org, become admin ────────────
     if (!existingOrg) {
       if (!firmName || typeof firmName !== "string" || !firmName.trim()) {
+        await getAuth().deleteUser(uid).catch(() => {});
         return jsonError("Law firm name is required", 400);
       }
       const cleanFirmName = firmName.trim();

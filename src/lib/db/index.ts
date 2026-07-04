@@ -14,13 +14,6 @@ export {
 } from "./submissions";
 
 export {
-  getUserDoc,
-  getUserByEmail,
-  setVerificationToken,
-  verifyEmail,
-} from "./users";
-
-export {
   createOrganization,
   getOrganization,
   getOrgByDomain,

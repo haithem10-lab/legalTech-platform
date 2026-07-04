@@ -15,5 +15,5 @@ export function isOriginAllowed(
   }
   if (allowedOrigins.length === 0) return false;
   const normalised = origin.replace(/\/$/, "");
-  return allowedOrigins.includes(normalised);
+  return allowedOrigins.some((a) => a.replace(/\/$/, "") === normalised);
 }

@@ -33,10 +33,15 @@ function buildSchema(fields: Field[]) {
       }
       case "dropdown":
       case "radio": {
-        const s = z.string();
-        shape[field.id] = field.required
-          ? s.min(1, `${field.label} is required`)
-          : s.optional();
+        if (field.options.length > 0) {
+          const values = field.options as [string, ...string[]];
+          const s = z.enum(values);
+          shape[field.id] = field.required ? s : s.optional();
+        } else {
+          shape[field.id] = field.required
+            ? z.string().min(1, `${field.label} is required`)
+            : z.string().optional();
+        }
         break;
       }
       case "file":

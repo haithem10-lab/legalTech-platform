@@ -104,14 +104,12 @@ export interface Organization {
   createdAt: string;
 }
 
-export type UserStatus = "unverified" | "pending_approval" | "active" | "blocked";
-
 export interface OrgMember {
   userId: string;
   orgId: string;
   email: string;
   name: string;
   role: "admin" | "lawyer";
-  status: UserStatus;
+  status: "active" | "pending_approval" | "blocked";
   joinedAt: string;
 }
